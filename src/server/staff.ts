@@ -32,3 +32,10 @@ export async function requireActiveStaff(): Promise<ActiveStaff> {
 
   return staffRow as ActiveStaff;
 }
+
+export async function signOut() {
+  "use server";
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/login");
+}
