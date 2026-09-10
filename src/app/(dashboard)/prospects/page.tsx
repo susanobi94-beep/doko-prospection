@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { listProspects } from "@/server/prospects";
 import { ProspectsTable } from "@/components/prospects/prospects-table";
 import { ProspectsFilterBar } from "@/components/prospects/prospects-filter-bar";
@@ -23,12 +24,12 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-bold text-[var(--fg)]">Prospects</h1>
-        <a
+        <Link
           href="/prospects/new"
           className="rounded-[6px] bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-fg)] hover:bg-[var(--primary-hover)]"
         >
           Ajouter un prospect
-        </a>
+        </Link>
       </div>
 
       <ProspectsFilterBar />

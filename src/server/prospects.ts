@@ -12,6 +12,25 @@ export type Prospect = {
   created_at: string;
 };
 
+export type ProspectDetail = Prospect & {
+  address: string | null;
+  source: string | null;
+  notes: string | null;
+};
+
+export async function getProspect(id: string): Promise<ProspectDetail | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("prospects")
+    .select("id, name, city, category, phone, whatsapp, address, source, notes, status, created_at")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .single();
+
+  if (error || !data) return null;
+  return data as ProspectDetail;
+}
+
 export type ListProspectsInput = {
   status?: string;
   city?: string;
