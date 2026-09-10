@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:rls": "tsx --env-file=.env.local scripts/test-rls.ts",
+    "db:migrate": "set -a && . .env.local && set +a && psql \"$SUPABASE_DB_URL\" -f supabase/migrations/0001_init.sql",
+    "db:seed": "tsx --env-file=.env.local scripts/seed-staff.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
