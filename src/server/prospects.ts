@@ -1,0 +1,61 @@
+import { createClient } from "@/lib/supabase/server";
+import { buildProspectsFilter, type ProspectStatus } from "@/server/prospects-filter";
+
+export type Prospect = {
+  id: string;
+  name: string;
+  city: string;
+  category: string;
+  phone: string;
+  whatsapp: string | null;
+  status: ProspectStatus;
+  created_at: string;
+};
+
+export type ListProspectsInput = {
+  status?: string;
+  city?: string;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+export type ListProspectsResult = {
+  rows: Prospect[];
+  page: number;
+  pageSize: number;
+  total: number;
+};
+
+export async function listProspects(input: ListProspectsInput): Promise<ListProspectsResult> {
+  const page = input.page && input.page > 0 ? input.page : 1;
+  const pageSize = input.pageSize && input.pageSize > 0 ? Math.min(input.pageSize, 100) : 25;
+  const filter = buildProspectsFilter(input);
+
+  const supabase = await createClient();
+  let query = supabase
+    .from("prospects")
+    .select("id, name, city, category, phone, whatsapp, status, created_at", { count: "exact" })
+    .is("deleted_at", null);
+
+  if (filter.status) query = query.eq("status", filter.status);
+  if (filter.city) query = query.ilike("city", `%${filter.city}%`);
+  if (filter.search) {
+    // L'index GIN (§4) est une expression sur name || ' ' || phone, pas une colonne matérialisée
+    // que le client JS peut cibler via .textSearch() — .or() sur les deux colonnes couvre le
+    // même besoin (nom OU téléphone, insensible à la casse) sans colonne générée supplémentaire.
+    const term = filter.search.replace(/[%,]/g, "");
+    query = query.or(`name.ilike.%${term}%,phone.ilike.%${term}%`);
+  }
+
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, count, error } = await query.order("created_at", { ascending: false }).range(from, to);
+
+  if (error) {
+    throw new Error(`listProspects: ${error.message}`);
+  }
+
+  return { rows: (data ?? []) as Prospect[], page, pageSize, total: count ?? 0 };
+}
