@@ -4,6 +4,7 @@ import { getProspect, listActivity } from "@/server/prospects";
 import { StatusSelect } from "@/components/prospects/status-select";
 import { DeleteProspectDialog } from "@/components/prospects/delete-prospect-dialog";
 import { ProspectActivityFeed } from "@/components/prospects/prospect-activity-feed";
+import { RelanceForm } from "@/components/relances/relance-form";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,9 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
       {prospect.notes && (
         <p className="mt-4 whitespace-pre-wrap text-sm text-[var(--fg)]">{prospect.notes}</p>
       )}
+
+      <h2 className="mt-8 mb-3 text-sm font-bold text-[var(--fg)]">Relance</h2>
+      <RelanceForm prospectId={id} />
 
       <h2 className="mt-8 mb-3 text-sm font-bold text-[var(--fg)]">Activité</h2>
       <ProspectActivityFeed entries={activity} />
