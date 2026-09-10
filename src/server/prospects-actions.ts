@@ -5,7 +5,7 @@
 // (les types passent par `import type`, effacés à la compilation, donc sans effet ici).
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { ProspectInputSchema, type ProspectInput } from "@/lib/validation";
+import { ProspectInputSchema, ProspectStatusSchema, type ProspectInput } from "@/lib/validation";
 
 export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -110,5 +110,26 @@ export async function softDeleteProspect(id: string): Promise<ActionResult<null>
   }
 
   revalidatePath("/prospects");
+  return { ok: true, data: null };
+}
+
+export async function changeProspectStatus(prospectId: string, newStatus: string): Promise<ActionResult<null>> {
+  const parsed = ProspectStatusSchema.safeParse(newStatus);
+  if (!parsed.success) {
+    return { ok: false, error: "Statut invalide" };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("change_prospect_status", {
+    p_prospect_id: prospectId,
+    p_new_status: parsed.data,
+  });
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  revalidatePath("/prospects");
+  revalidatePath(`/prospects/${prospectId}`);
   return { ok: true, data: null };
 }

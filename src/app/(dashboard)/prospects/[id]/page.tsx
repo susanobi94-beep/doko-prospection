@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProspect } from "@/server/prospects";
-import { StatusBadge } from "@/components/prospects/status-badge";
+import { getProspect, listActivity } from "@/server/prospects";
+import { StatusSelect } from "@/components/prospects/status-select";
 import { DeleteProspectDialog } from "@/components/prospects/delete-prospect-dialog";
+import { ProspectActivityFeed } from "@/components/prospects/prospect-activity-feed";
 
 export const dynamic = "force-dynamic";
 
@@ -11,12 +12,14 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
   const prospect = await getProspect(id);
   if (!prospect) notFound();
 
+  const activity = await listActivity(id);
+
   return (
     <div className="max-w-[720px]">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-[var(--fg)]">{prospect.name}</h1>
-          <StatusBadge status={prospect.status} />
+          <StatusSelect prospectId={id} status={prospect.status} />
         </div>
         <div className="flex gap-2">
           <Link
@@ -41,6 +44,9 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
       {prospect.notes && (
         <p className="mt-4 whitespace-pre-wrap text-sm text-[var(--fg)]">{prospect.notes}</p>
       )}
+
+      <h2 className="mt-8 mb-3 text-sm font-bold text-[var(--fg)]">Activité</h2>
+      <ProspectActivityFeed entries={activity} />
     </div>
   );
 }

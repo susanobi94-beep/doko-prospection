@@ -78,3 +78,27 @@ export async function listProspects(input: ListProspectsInput): Promise<ListPros
 
   return { rows: (data ?? []) as Prospect[], page, pageSize, total: count ?? 0 };
 }
+
+export type ActivityLogEntry = {
+  id: string;
+  action: string;
+  before: Record<string, unknown> | null;
+  after: Record<string, unknown> | null;
+  created_at: string;
+  actor: { name: string } | null;
+};
+
+export async function listActivity(prospectId: string): Promise<ActivityLogEntry[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("activity_log")
+    .select("id, action, before, after, created_at, actor:staff(name)")
+    .eq("prospect_id", prospectId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`listActivity: ${error.message}`);
+  }
+
+  return (data ?? []) as unknown as ActivityLogEntry[];
+}
