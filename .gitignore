@@ -44,3 +44,4 @@ cloudflare-env.d.ts
 next-env.d.ts
 
 !.env.example
+/.claude/scheduled_tasks.lock
