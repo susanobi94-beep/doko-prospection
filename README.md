@@ -38,14 +38,26 @@ tableau de bord Supabase.
 | Test RLS automatisé | `npm run test:rls` |
 | Migration DB | `npm run db:migrate` |
 | Seed staff | `npm run db:seed -- --email=... --name=...` (après la première connexion Google du collaborateur) |
+| Preview Cloudflare (build + run local) | `npm run preview` |
+| Déploiement Cloudflare | `npm run deploy` |
 
-## Déploiement (Vercel)
+## Déploiement (Cloudflare Workers)
 
-1. Lier le dépôt Git à un nouveau projet Vercel.
-2. Dans Project Settings → Environment Variables, définir les 4 variables ci-dessus pour
-   **Production** et **Preview**.
-3. Build command par défaut (`next build`), aucun override requis.
+Déployé via [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare) (l'adaptateur Next.js →
+Workers recommandé par Cloudflare — `next-on-pages` est déprécié). Une app Next.js SSR sur Cloudflare
+tourne comme un Worker ; le produit "Pages" historique ne couvre que le côté statique.
+
+1. Compte Cloudflare + `npx wrangler login` (une fois, ouvre un navigateur pour l'auth).
+2. Définir les 4 variables d'environnement (§ ci-dessus) comme secrets Worker :
+   `npx wrangler secret put NEXT_PUBLIC_SUPABASE_URL` (répéter pour les 3 autres — les
+   `NEXT_PUBLIC_*` peuvent aussi être en clair dans `wrangler.jsonc` `vars`, les 2 secrets restent en
+   `wrangler secret`).
+3. `npm run deploy` — construit (`opennextjs-cloudflare build`) puis déploie (`opennextjs-cloudflare
+   deploy`) sur `*.workers.dev` ou un domaine personnalisé configuré dans le dashboard Cloudflare.
 4. Une fois déployé, vérifier `GET <url>/api/health` → `200 {"ok":true}`.
+
+`npm run preview` fait la même build mais lance le Worker localement (via `wrangler dev` sous le
+capot) avant de déployer pour de vrai.
 
 ## Note opérationnelle — pause Supabase
 
