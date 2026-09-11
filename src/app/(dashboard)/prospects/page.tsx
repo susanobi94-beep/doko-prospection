@@ -22,7 +22,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-bold text-[var(--fg)]">Prospects</h1>
         <Link
           href="/prospects/new"

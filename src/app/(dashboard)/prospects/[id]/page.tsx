@@ -17,7 +17,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
 
   return (
     <div className="max-w-[720px]">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-[var(--fg)]">{prospect.name}</h1>
           <StatusSelect prospectId={id} status={prospect.status} />
@@ -33,7 +33,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
         </div>
       </div>
 
-      <dl className="grid grid-cols-2 gap-x-6 gap-y-3 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] p-4 text-sm">
+      <dl className="grid grid-cols-1 gap-x-6 gap-y-3 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] p-4 text-sm sm:grid-cols-2">
         <Detail label="Ville" value={prospect.city} />
         <Detail label="Catégorie" value={prospect.category} />
         <Detail label="Téléphone" value={prospect.phone} />

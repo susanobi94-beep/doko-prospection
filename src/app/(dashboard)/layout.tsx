@@ -6,11 +6,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const staff = await requireActiveStaff();
 
   return (
-    <div className="flex min-h-screen bg-[var(--background)]">
+    <div className="flex min-h-screen flex-col bg-[var(--background)] md:flex-row">
       <Sidebar />
       <div className="flex flex-1 flex-col">
         <Header staffName={staff.name} />
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-4 sm:p-6">{children}</main>
       </div>
     </div>
   );
