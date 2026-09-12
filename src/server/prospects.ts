@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { buildProspectsFilter, type ProspectStatus } from "@/server/prospects-filter";
+import { buildProspectsFilter, sanitizeSearchTerm, type ProspectStatus } from "@/server/prospects-filter";
 
 export type Prospect = {
   id: string;
@@ -58,12 +58,12 @@ export async function listProspects(input: ListProspectsInput): Promise<ListPros
     .is("deleted_at", null);
 
   if (filter.status) query = query.eq("status", filter.status);
-  if (filter.city) query = query.ilike("city", `%${filter.city}%`);
+  if (filter.city) query = query.ilike("city", `%${sanitizeSearchTerm(filter.city)}%`);
   if (filter.search) {
     // L'index GIN (§4) est une expression sur name || ' ' || phone, pas une colonne matérialisée
     // que le client JS peut cibler via .textSearch() — .or() sur les deux colonnes couvre le
     // même besoin (nom OU téléphone, insensible à la casse) sans colonne générée supplémentaire.
-    const term = filter.search.replace(/[%,]/g, "");
+    const term = sanitizeSearchTerm(filter.search);
     query = query.or(`name.ilike.%${term}%,phone.ilike.%${term}%`);
   }
 

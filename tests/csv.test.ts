@@ -17,4 +17,10 @@ describe("escapeCsvField", () => {
   it("entoure une valeur contenant un retour à la ligne", () => {
     expect(escapeCsvField("ligne 1\nligne 2")).toBe('"ligne 1\nligne 2"');
   });
+
+  it("neutralise une valeur qui ressemble à une formule", () => {
+    expect(escapeCsvField("=cmd|'/c calc'!A1")).toBe("'=cmd|'/c calc'!A1");
+    expect(escapeCsvField("+1234")).toBe("'+1234");
+    expect(escapeCsvField("@SUM(A1)")).toBe("'@SUM(A1)");
+  });
 });

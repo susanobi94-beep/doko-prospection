@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { evaluateStaffAccess } from "@/server/staff-access";
-import { buildProspectsFilter } from "@/server/prospects-filter";
+import { buildProspectsFilter, sanitizeSearchTerm } from "@/server/prospects-filter";
 import { writeCsvRow } from "@/lib/csv";
 
 const HEADER = ["name", "city", "category", "phone", "whatsapp", "status", "created_at"];
@@ -35,9 +35,9 @@ export async function GET(request: Request) {
     .is("deleted_at", null);
 
   if (filter.status) query = query.eq("status", filter.status);
-  if (filter.city) query = query.ilike("city", `%${filter.city}%`);
+  if (filter.city) query = query.ilike("city", `%${sanitizeSearchTerm(filter.city)}%`);
   if (filter.search) {
-    const term = filter.search.replace(/[%,]/g, "");
+    const term = sanitizeSearchTerm(filter.search);
     query = query.or(`name.ilike.%${term}%,phone.ilike.%${term}%`);
   }
 

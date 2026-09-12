@@ -13,6 +13,15 @@ export type ProspectsFilter = {
   search?: string;
 };
 
+// Échappe un terme utilisateur pour un usage sûr dans un motif ILIKE PostgREST construit à la
+// main (.or(`name.ilike.%${term}%,...`)) : retire les caractères de syntaxe de filtre PostgREST
+// (virgule = séparateur de conditions, point = séparateur column.op.value, parenthèses =
+// groupement) qui permettraient sinon d'injecter une clause de filtre supplémentaire, et échappe
+// les jokers ILIKE (%, _) pour qu'ils soient traités comme du texte littéral.
+export function sanitizeSearchTerm(term: string): string {
+  return term.replace(/[,.()]/g, "").replace(/[%_\\]/g, "\\$&");
+}
+
 // Fonction pure, sans import ni appel réseau — testée isolément dans
 // tests/prospects-query.test.ts, séparée de prospects.ts pour ne pas entraîner le
 // chargement de env.ts (voir la même raison en src/server/staff-access.ts).
