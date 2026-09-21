@@ -25,3 +25,8 @@ export const RelanceInputSchema = z.object({
 export type RelanceInput = z.infer<typeof RelanceInputSchema>;
 
 export const ProspectStatusSchema = z.enum(PROSPECT_STATUSES);
+
+export const LoginInputSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Email invalide"),
+  password: z.string().min(1, "Mot de passe requis"),
+});

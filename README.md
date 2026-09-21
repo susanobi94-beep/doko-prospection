@@ -1,6 +1,6 @@
 # Doko Prospection
 
-Outil interne de suivi de prospection boutiques pour Doko (Next.js + Supabase).
+Outil interne de suivi de prospection boutiques pour Doko (Next.js + Supabase auto-hébergé).
 
 ## Démarrage local
 
@@ -14,7 +14,7 @@ npm run dev
 
 | Variable | Rôle | Où l'obtenir | Secrète ? |
 |---|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | URL du projet Supabase | Project Settings → API → Project URL | Non |
+| `NEXT_PUBLIC_SUPABASE_URL` | URL publique de l'API Supabase (Kong) — **HTTPS obligatoire** | Coolify → service Supabase → domaine de `supabase-kong` | Non |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Clé publique anonyme, soumise aux RLS | Project Settings → API → anon public | Non |
 | `SUPABASE_DB_URL` | Connexion Postgres pour `db:migrate`/`test:rls`/`db:seed` | Project Settings → Database → Connection string | Oui |
 | `SUPABASE_SERVICE_ROLE_KEY` | Utilisée uniquement par `scripts/*.ts` | Project Settings → API → service_role | Oui |
@@ -25,6 +25,14 @@ directe (port 5432, non poolée) peut être injoignable — DNS IPv6-only et/ou 
 (`aws-0-<region>.pooler.supabase.com:5432`, Project Settings → Database → Connection string →
 Session pooler) comme `SUPABASE_DB_URL`, ou appliquer la migration manuellement via le SQL Editor du
 tableau de bord Supabase.
+
+## Authentification
+
+Connexion **email + mot de passe** (Supabase Auth), exécutée côté serveur : le navigateur ne contacte
+jamais Supabase directement. Il n'y a pas d'inscription publique — les comptes sont créés par
+`npm run db:seed` (compte Auth + ligne `staff`). Sur l'instance Supabase, mettre
+`DISABLE_SIGNUP=true` (et `ENABLE_PHONE_SIGNUP=false`) pour fermer `/auth/v1/signup` ; la création
+par l'API admin (`db:seed`) continue de fonctionner. L'accès reste conditionné à `staff.active = true`.
 
 ## Commandes
 
@@ -37,7 +45,7 @@ tableau de bord Supabase.
 | Tests unitaires | `npm run test` |
 | Test RLS automatisé | `npm run test:rls` |
 | Migration DB | `npm run db:migrate` |
-| Seed staff | `npm run db:seed -- --email=... --name=...` (après la première connexion Google du collaborateur) |
+| Créer un compte staff | `npm run db:seed -- --email=... --name=... [--password=...]` (mot de passe généré et affiché une fois si omis) |
 | Preview Cloudflare (build + run local) | `npm run preview` |
 | Déploiement Cloudflare | `npm run deploy` |
 
