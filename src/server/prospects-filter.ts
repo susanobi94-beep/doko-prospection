@@ -5,26 +5,22 @@ export type ProspectsFilterInput = {
   status?: string;
   city?: string;
   search?: string;
+  assignedTo?: string;
 };
 
 export type ProspectsFilter = {
   status?: ProspectStatus;
   city?: string;
   search?: string;
+  assignedTo?: string;
 };
 
-// Échappe un terme utilisateur pour un usage sûr dans un motif ILIKE PostgREST construit à la
-// main (.or(`name.ilike.%${term}%,...`)) : retire les caractères de syntaxe de filtre PostgREST
-// (virgule = séparateur de conditions, point = séparateur column.op.value, parenthèses =
-// groupement) qui permettraient sinon d'injecter une clause de filtre supplémentaire, et échappe
-// les jokers ILIKE (%, _) pour qu'ils soient traités comme du texte littéral.
+// Échappe un terme utilisateur pour un usage sûr dans un motif ILIKE PostgREST
 export function sanitizeSearchTerm(term: string): string {
   return term.replace(/[,.()]/g, "").replace(/[%_\\]/g, "\\$&");
 }
 
-// Fonction pure, sans import ni appel réseau — testée isolément dans
-// tests/prospects-query.test.ts, séparée de prospects.ts pour ne pas entraîner le
-// chargement de env.ts (voir la même raison en src/server/staff-access.ts).
+// Fonction pure, sans import ni appel réseau — testée isolément dans tests/prospects-query.test.ts
 export function buildProspectsFilter(input: ProspectsFilterInput): ProspectsFilter {
   const filter: ProspectsFilter = {};
 
@@ -36,6 +32,9 @@ export function buildProspectsFilter(input: ProspectsFilterInput): ProspectsFilt
   }
   if (input.search && input.search.trim() !== "") {
     filter.search = input.search.trim();
+  }
+  if (input.assignedTo && input.assignedTo.trim() !== "") {
+    filter.assignedTo = input.assignedTo.trim();
   }
 
   return filter;

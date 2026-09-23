@@ -61,5 +61,19 @@ export async function markRelanceDone(id: string): Promise<ActionResult<null>> {
   }
 
   revalidatePath("/relances");
+  revalidatePath("/prospects");
+  return { ok: true, data: null };
+}
+
+export async function toggleRelanceDone(id: string, done: boolean): Promise<ActionResult<null>> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("relances").update({ done }).eq("id", id);
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  revalidatePath("/relances");
+  revalidatePath("/prospects");
   return { ok: true, data: null };
 }

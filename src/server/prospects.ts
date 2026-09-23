@@ -10,6 +10,8 @@ export type Prospect = {
   whatsapp: string | null;
   status: ProspectStatus;
   created_at: string;
+  assigned_to?: string | null;
+  assigned_staff?: { name: string } | null;
 };
 
 export type ProspectDetail = Prospect & {
@@ -22,19 +24,30 @@ export async function getProspect(id: string): Promise<ProspectDetail | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("prospects")
-    .select("id, name, city, category, phone, whatsapp, address, source, notes, status, created_at")
+    .select("id, name, city, category, phone, whatsapp, address, source, notes, status, created_at, assigned_to, assigned_staff:staff!prospects_assigned_to_fkey(name)")
     .eq("id", id)
     .is("deleted_at", null)
     .single();
 
-  if (error || !data) return null;
-  return data as ProspectDetail;
+  if (error || !data) {
+    // Si la clé étrangère spécifique échoue lors de la transition, repli sur select sans relation
+    const fallback = await supabase
+      .from("prospects")
+      .select("id, name, city, category, phone, whatsapp, address, source, notes, status, created_at, assigned_to")
+      .eq("id", id)
+      .is("deleted_at", null)
+      .single();
+    if (fallback.error || !fallback.data) return null;
+    return fallback.data as ProspectDetail;
+  }
+  return data as unknown as ProspectDetail;
 }
 
 export type ListProspectsInput = {
   status?: string;
   city?: string;
   search?: string;
+  assignedTo?: string;
   page?: number;
   pageSize?: number;
 };
@@ -54,15 +67,19 @@ export async function listProspects(input: ListProspectsInput): Promise<ListPros
   const supabase = await createClient();
   let query = supabase
     .from("prospects")
-    .select("id, name, city, category, phone, whatsapp, status, created_at", { count: "exact" })
+    .select("id, name, city, category, phone, whatsapp, status, created_at, assigned_to", { count: "exact" })
     .is("deleted_at", null);
 
   if (filter.status) query = query.eq("status", filter.status);
   if (filter.city) query = query.ilike("city", `%${sanitizeSearchTerm(filter.city)}%`);
+  if (filter.assignedTo) {
+    if (filter.assignedTo === "unassigned") {
+      query = query.is("assigned_to", null);
+    } else {
+      query = query.eq("assigned_to", filter.assignedTo);
+    }
+  }
   if (filter.search) {
-    // L'index GIN (§4) est une expression sur name || ' ' || phone, pas une colonne matérialisée
-    // que le client JS peut cibler via .textSearch() — .or() sur les deux colonnes couvre le
-    // même besoin (nom OU téléphone, insensible à la casse) sans colonne générée supplémentaire.
     const term = sanitizeSearchTerm(filter.search);
     query = query.or(`name.ilike.%${term}%,phone.ilike.%${term}%`);
   }
@@ -101,4 +118,62 @@ export async function listActivity(prospectId: string): Promise<ActivityLogEntry
   }
 
   return (data ?? []) as unknown as ActivityLogEntry[];
+}
+
+export type DashboardStats = {
+  totalProspects: number;
+  newThisWeek: number;
+  totalClients: number;
+  byStatus: Record<ProspectStatus, number>;
+};
+
+export async function getDashboardStats(): Promise<DashboardStats> {
+  const supabase = await createClient();
+  const { data: rows, error } = await supabase
+    .from("prospects")
+    .select("status, created_at")
+    .is("deleted_at", null);
+
+  if (error || !rows) {
+    return {
+      totalProspects: 0,
+      newThisWeek: 0,
+      totalClients: 0,
+      byStatus: {
+        a_contacter: 0,
+        contacte: 0,
+        interesse: 0,
+        client: 0,
+        refuse: 0,
+      },
+    };
+  }
+
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+  const byStatus: Record<ProspectStatus, number> = {
+    a_contacter: 0,
+    contacte: 0,
+    interesse: 0,
+    client: 0,
+    refuse: 0,
+  };
+
+  let newThisWeek = 0;
+  for (const r of rows) {
+    if (r.status in byStatus) {
+      byStatus[r.status as ProspectStatus]++;
+    }
+    if (new Date(r.created_at) >= oneWeekAgo) {
+      newThisWeek++;
+    }
+  }
+
+  return {
+    totalProspects: rows.length,
+    newThisWeek,
+    totalClients: byStatus.client,
+    byStatus,
+  };
 }

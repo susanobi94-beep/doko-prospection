@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { PROSPECT_STATUSES } from "@/server/prospects-filter";
+import type { StaffMember } from "@/server/staff";
 
 const STATUS_LABELS: Record<string, string> = {
   a_contacter: "À contacter",
@@ -13,10 +14,21 @@ const STATUS_LABELS: Record<string, string> = {
   refuse: "Refusé",
 };
 
-export function ProspectsFilterBar() {
+export function ProspectsFilterBar({
+  staffList,
+  currentUserId,
+}: {
+  staffList?: StaffMember[];
+  currentUserId?: string;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
+
+  const currentStatus = searchParams.get("status") ?? "";
+  const currentCity = searchParams.get("city") ?? "";
+  const currentAssignedTo = searchParams.get("assignedTo") ?? "";
+  const hasActiveFilters = Boolean(currentStatus || currentCity || currentAssignedTo || search);
 
   function pushParams(next: Record<string, string | null>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -24,8 +36,13 @@ export function ProspectsFilterBar() {
       if (value) params.set(key, value);
       else params.delete(key);
     }
-    params.delete("page"); // tout changement de filtre repart de la page 1
+    params.delete("page"); // réinitialise à la page 1 lors d'un filtrage
     router.push(`/prospects?${params.toString()}`);
+  }
+
+  function resetFilters() {
+    setSearch("");
+    router.push("/prospects");
   }
 
   return (
@@ -45,7 +62,7 @@ export function ProspectsFilterBar() {
       </form>
 
       <select
-        defaultValue={searchParams.get("status") ?? ""}
+        value={currentStatus}
         onChange={(e) => pushParams({ status: e.target.value || null })}
         className="h-9 rounded-[6px] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--fg)]"
       >
@@ -57,12 +74,42 @@ export function ProspectsFilterBar() {
         ))}
       </select>
 
+      {/* Filtre par commercial assigné */}
+      {staffList && staffList.length > 0 && (
+        <select
+          value={currentAssignedTo}
+          onChange={(e) => pushParams({ assignedTo: e.target.value || null })}
+          className="h-9 rounded-[6px] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--fg)]"
+        >
+          <option value="">Tous les commerciaux</option>
+          {currentUserId && <option value={currentUserId}>👤 Mes prospects assignés</option>}
+          <option value="unassigned">Non assignés</option>
+          {staffList
+            .filter((s) => s.id !== currentUserId)
+            .map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+        </select>
+      )}
+
       <Input
-        defaultValue={searchParams.get("city") ?? ""}
+        defaultValue={currentCity}
         onBlur={(e) => pushParams({ city: e.target.value || null })}
-        placeholder="Ville…"
+        placeholder="Filtrer par ville…"
         className="w-40"
       />
+
+      {hasActiveFilters && (
+        <button
+          type="button"
+          onClick={resetFilters}
+          className="text-xs text-[var(--fg-muted)] hover:text-[var(--fg)] underline"
+        >
+          Réinitialiser
+        </button>
+      )}
     </div>
   );
 }

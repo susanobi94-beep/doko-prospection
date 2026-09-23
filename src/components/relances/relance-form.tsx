@@ -1,16 +1,23 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createRelance, type RelanceFormState } from "@/server/relances-actions";
 
 export function RelanceForm({ prospectId }: { prospectId: string }) {
+  const formRef = useRef<HTMLFormElement>(null);
   const action = createRelance.bind(null, prospectId);
   const [state, formAction, pending] = useActionState<RelanceFormState, FormData>(action, null);
 
+  useEffect(() => {
+    if (state?.ok) {
+      formRef.current?.reset();
+    }
+  }, [state]);
+
   return (
-    <form action={formAction} className="flex flex-wrap items-end gap-3">
+    <form ref={formRef} action={formAction} className="flex flex-wrap items-end gap-3">
       <div>
         <Label htmlFor="dueDate">Date de relance</Label>
         <Input
@@ -28,18 +35,21 @@ export function RelanceForm({ prospectId }: { prospectId: string }) {
         )}
       </div>
       <div className="flex-1 min-w-40">
-        <Label htmlFor="note">Note</Label>
-        <Input id="note" name="note" className="mt-1" />
+        <Label htmlFor="note">Note ou objet du rappel</Label>
+        <Input id="note" name="note" placeholder="Ex: rappeler pour démo WhatsApp" className="mt-1" />
       </div>
       <button
         type="submit"
         disabled={pending}
         className="h-9 rounded-[6px] bg-[var(--primary)] px-4 text-sm font-medium text-[var(--primary-fg)] hover:bg-[var(--primary-hover)] disabled:opacity-60"
       >
-        {pending ? "Ajout…" : "Ajouter une relance"}
+        {pending ? "Ajout…" : "Ajouter la relance"}
       </button>
       {state && !state.ok && state.error && !state.fieldErrors && (
-        <p className="text-sm text-[var(--destructive)]">{state.error}</p>
+        <p className="w-full text-sm text-[var(--destructive)]">{state.error}</p>
+      )}
+      {state?.ok && (
+        <p className="w-full text-xs text-green-600 font-medium">Relance programmée avec succès.</p>
       )}
     </form>
   );

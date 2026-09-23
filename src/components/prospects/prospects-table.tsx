@@ -3,48 +3,89 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { StatusBadge } from "@/components/prospects/status-badge";
 import type { Prospect } from "@/server/prospects";
 
+const CATEGORY_LABELS: Record<string, string> = {
+  boutique_telephone: "Téléphonie",
+  pme: "PME",
+  diaspora: "Diaspora",
+};
+
 export function ProspectsTable({ rows }: { rows: Prospect[] }) {
   if (rows.length === 0) {
     return (
-      <p className="p-6 text-center text-sm text-[var(--fg-muted)]">
-        Aucun prospect ne correspond à ces filtres.{" "}
-        <Link href="/prospects" className="text-[var(--primary)] underline">
+      <div className="rounded-[10px] border border-dashed border-[var(--border)] p-8 text-center text-sm text-[var(--fg-muted)]">
+        Aucun prospect ne correspond à ces critères.{" "}
+        <Link href="/prospects" className="text-[var(--primary)] underline font-medium">
           Réinitialiser les filtres
         </Link>
-      </p>
+      </div>
     );
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Nom</TableHead>
-          <TableHead>Ville</TableHead>
-          <TableHead>Catégorie</TableHead>
-          <TableHead>Téléphone</TableHead>
-          <TableHead>Statut</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {rows.map((row) => (
-          <TableRow key={row.id}>
-            <TableCell className="font-medium">{row.name}</TableCell>
-            <TableCell>{row.city}</TableCell>
-            <TableCell>{row.category}</TableCell>
-            <TableCell>{row.phone}</TableCell>
-            <TableCell>
-              <StatusBadge status={row.status} />
-            </TableCell>
-            <TableCell className="text-right">
-              <Link href={`/prospects/${row.id}`} className="text-sm text-[var(--primary)] underline">
-                Voir
-              </Link>
-            </TableCell>
+    <div className="overflow-x-auto rounded-[10px] border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Boutique</TableHead>
+            <TableHead>Ville</TableHead>
+            <TableHead>Catégorie</TableHead>
+            <TableHead>Contact</TableHead>
+            <TableHead>Statut</TableHead>
+            <TableHead className="text-right">Action</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => {
+            const rawWa = row.whatsapp || row.phone;
+            const waClean = rawWa.replace(/\D/g, "");
+
+            return (
+              <TableRow key={row.id} className="hover:bg-[var(--surface-hover)]">
+                <TableCell className="font-medium text-[var(--fg)]">
+                  <Link href={`/prospects/${row.id}`} className="hover:underline">
+                    {row.name}
+                  </Link>
+                </TableCell>
+                <TableCell className="text-[var(--fg-muted)]">{row.city}</TableCell>
+                <TableCell>
+                  <span className="rounded bg-[var(--surface-muted)] px-2 py-0.5 text-xs text-[var(--fg-muted)]">
+                    {CATEGORY_LABELS[row.category] ?? row.category}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2 text-xs">
+                    <a href={`tel:${row.phone}`} className="text-[var(--fg)] hover:underline">
+                      📞 {row.phone}
+                    </a>
+                    {waClean && (
+                      <a
+                        href={`https://wa.me/${waClean}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-emerald-600 hover:text-emerald-700"
+                        title="Ouvrir WhatsApp"
+                      >
+                        💬
+                      </a>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <StatusBadge status={row.status} />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Link
+                    href={`/prospects/${row.id}`}
+                    className="rounded-[6px] border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1 text-xs font-medium text-[var(--fg)] hover:bg-[var(--background)]"
+                  >
+                    Fiche →
+                  </Link>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

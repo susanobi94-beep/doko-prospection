@@ -1,0 +1,3633 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#1B6344">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Caisse enregistreuse et gestion de stock pour commerces au Cameroun - 100% hors-ligne">
+  <title>Caisse Boutique — Encaissement & Stock</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #F3F1E7;
+      --surface: #FCFAF4;
+      --surface-2: #E8E5D5;
+      --surface-3: #DCD9C7;
+      --ink: #17211B;
+      --muted: #5B675E;
+      --line: #D5D1BE;
+      --accent: #1B6344;
+      --accent-light: #E2EFE7;
+      --accent-ink: #FFFFFF;
+      --accent-gold: #B57E24;
+      --accent-gold-light: #F7EEDB;
+      --danger: #B83E28;
+      --danger-light: #FCE8E5;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --shadow-sm: 0 2px 4px rgba(23, 33, 27, 0.05);
+      --shadow-md: 0 6px 18px rgba(23, 33, 27, 0.08);
+      --shadow-lg: 0 14px 34px rgba(23, 33, 27, 0.12);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      margin: 0;
+      background: #E5E2D2;
+      color: var(--ink);
+      font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .num {
+      font-family: 'IBM Plex Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* App Shell Container */
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.15);
+      padding-bottom: 74px;
+    }
+
+    /* Header */
+    header.app-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .shop-meta h1 {
+      font-family: 'Fraunces', serif;
+      font-size: 18px;
+      margin: 0;
+      line-height: 1.2;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .shop-meta .edit-shop-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 0;
+    }
+
+    .badges-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 3px;
+    }
+
+    .status-badge {
+      font-size: 10.5px;
+      color: var(--accent);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .trial-badge {
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--accent-gold-light);
+      color: var(--accent-gold);
+      padding: 2px 7px;
+      border-radius: 12px;
+      border: 1px solid rgba(181, 126, 36, 0.3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .trial-badge.expired {
+      background: var(--danger-light);
+      color: var(--danger);
+      border-color: rgba(184, 62, 40, 0.3);
+      animation: pulseAlert 1.5s infinite;
+    }
+
+    @keyframes pulseAlert {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Pages Container */
+    main.view-container {
+      flex: 1;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .view { display: none; }
+    .view.active { display: flex; flex-direction: column; gap: 14px; }
+
+    /* ========================================================= */
+    /* VUE 1 : VENTE (POS)                                       */
+    /* ========================================================= */
+    .search-box {
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 11px 14px 11px 36px;
+      font-size: 14px;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-box input:focus { border-color: var(--accent); }
+    .search-box .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    /* Grille de produits */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .product-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 12px 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 90px;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.1s, border-color 0.15s, background-color 0.15s;
+      position: relative;
+      user-select: none;
+    }
+
+    .product-card:active {
+      transform: scale(0.97);
+      background: var(--accent-light);
+      border-color: var(--accent);
+    }
+
+    .product-card.out-of-stock {
+      opacity: 0.55;
+      background: var(--surface-2);
+      pointer-events: none;
+    }
+
+    .p-title {
+      font-weight: 600;
+      font-size: 13.5px;
+      line-height: 1.25;
+      color: var(--ink);
+    }
+
+    .p-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .p-price {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .p-stock-badge {
+      font-size: 10px;
+      color: var(--muted);
+      background: var(--surface-2);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    .p-stock-badge.low {
+      color: var(--danger);
+      background: var(--danger-light);
+      font-weight: 600;
+    }
+
+    /* Panier / Ticket */
+    .cart-drawer {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .cart-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+    }
+
+    .cart-head h3 {
+      font-size: 14px;
+      margin: 0;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cart-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 190px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .cart-empty-msg {
+      font-size: 12.5px;
+      color: var(--muted);
+      text-align: center;
+      padding: 18px 0;
+    }
+
+    .cart-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      padding: 6px 8px;
+      font-size: 12.5px;
+    }
+
+    .cart-row .item-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .cart-row .item-name { font-weight: 600; }
+    .cart-row .item-unit-price { font-size: 11px; color: var(--muted); }
+
+    .cart-row .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: 8px;
+    }
+
+    .qty-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qty-btn:active { background: var(--surface-3); }
+
+    .cart-row .item-total {
+      font-weight: 700;
+      min-width: 60px;
+      text-align: right;
+    }
+
+    .cart-total-bar {
+      border-top: 1px dashed var(--line);
+      padding-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .cart-total-bar .label {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .cart-total-bar .value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .cart-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-checkout {
+      flex: 1;
+      background: var(--accent);
+      color: var(--accent-ink);
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 13px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(27, 99, 68, 0.3);
+    }
+
+    .btn-checkout:disabled {
+      opacity: 0.5;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .btn-checkout:not(:disabled):active { transform: scale(0.98); }
+
+    /* ========================================================= */
+    /* VUE 2 : STOCK                                             */
+    /* ========================================================= */
+    .stock-top-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 10px 8px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .stat-card .val {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .stat-card .lbl {
+      font-size: 10.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .stat-card.danger .val { color: var(--danger); }
+
+    .stock-actions-bar {
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+    }
+
+    .btn-add-product {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 11px 14px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .stock-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .stock-item-row {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .stock-item-row.low-warning {
+      border-color: var(--danger);
+      background: #FFFDFB;
+    }
+
+    .stock-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .stock-item-title { font-weight: 600; font-size: 14px; }
+    .stock-item-price { font-size: 12px; color: var(--muted); }
+    .stock-item-qty { font-size: 14px; font-weight: 700; color: var(--accent); }
+    .stock-item-row.low-warning .stock-item-qty { color: var(--danger); }
+
+    .stock-progress-track {
+      height: 6px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      overflow: hidden;
+    }
+
+    .stock-progress-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 999px;
+      transition: width 0.3s;
+    }
+
+    .stock-item-row.low-warning .stock-progress-bar { background: var(--danger); }
+
+    .stock-item-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 4px;
+      border-top: 1px solid var(--line);
+    }
+
+    .stock-badge-tag {
+      font-size: 10.5px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: var(--surface-2);
+      color: var(--muted);
+    }
+
+    .stock-badge-tag.alert {
+      background: var(--danger-light);
+      color: var(--danger);
+      font-weight: 600;
+    }
+
+    .quick-restock-btns {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-quick-add {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-quick-add:active { background: var(--surface-3); }
+
+    .btn-quick-add.danger {
+      color: var(--danger);
+      border-color: rgba(184, 62, 40, 0.3);
+      background: var(--danger-light);
+    }
+    .btn-quick-add.danger:hover {
+      background: #FADBD8;
+    }
+
+    /* Sélecteur de période du Bilan */
+    .period-selector {
+      display: flex;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 4px;
+      gap: 4px;
+    }
+    .period-pill {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 8px 4px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--muted);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .period-pill.active {
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      font-weight: 700;
+    }
+
+    /* Badge Comparatif Versus */
+    .versus-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .versus-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+    }
+    .versus-badge.positive {
+      background: rgba(255, 255, 255, 0.22);
+      color: #A3E635;
+    }
+    .versus-badge.negative {
+      background: rgba(255, 255, 255, 0.18);
+      color: #FCA5A5;
+    }
+    .versus-badge.neutral {
+      background: rgba(255, 255, 255, 0.18);
+      color: #E2E8F0;
+    }
+
+    /* Top Produits */
+    .top-products-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .top-prods-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .top-prods-head h3 {
+      margin: 0;
+      font-size: 13.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .top-prods-head .period-sub-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .top-products-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .top-prod-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .top-prod-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+    .top-prod-name {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .top-prod-rank {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .top-prod-rank.gold { background: #FEF08A; color: #854D0E; }
+    .top-prod-rank.silver { background: #E2E8F0; color: #475569; }
+    .top-prod-rank.bronze { background: #FFEDD5; color: #9A3412; }
+    .top-prod-metrics {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 11.5px;
+    }
+    .top-prod-qty {
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .top-prod-revenue {
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .top-prod-bar-track {
+      width: 100%;
+      height: 5px;
+      background: var(--surface-2);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .top-prod-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #1B6344, #34D399);
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    /* Grille de Modèles d'activité */
+    .template-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+    .template-card {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s ease;
+      width: 100%;
+    }
+    .template-card:hover {
+      background: var(--surface-3);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .template-card .t-icon {
+      font-size: 26px;
+      flex: none;
+    }
+    .template-card .t-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .template-card .t-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .template-card .t-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .template-card .t-count {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-top: 2px;
+    }
+
+    /* ========================================================= */
+    /* VUE 3 : BILAN (TABLEAU DE BORD)                           */
+    /* ========================================================= */
+    .hero-kpi {
+      background: linear-gradient(145deg, #1B6344, #12432E);
+      color: white;
+      border-radius: var(--radius-lg);
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-shadow: 0 8px 24px rgba(27, 99, 68, 0.25);
+    }
+
+    .hero-kpi .label {
+      font-size: 11.5px;
+      opacity: 0.85;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .hero-kpi .amount {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .hero-kpi .kpi-sub {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      opacity: 0.9;
+      margin-top: 6px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .dashboard-splits {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .split-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .split-card .split-title { font-size: 11px; color: var(--muted); text-transform: uppercase; }
+    .split-card .split-val { font-size: 16px; font-weight: 700; color: var(--ink); }
+
+    .danger-alert-box {
+      background: var(--danger-light);
+      border: 1px solid rgba(184, 62, 40, 0.25);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .danger-alert-box .icon { font-size: 18px; }
+    .danger-alert-box .txt { font-size: 12px; color: var(--danger); line-height: 1.35; flex: 1; }
+
+    .backup-reminder-card {
+      background: #E8F5E9;
+      border: 1px solid #A5D6A7;
+      border-radius: var(--radius-md);
+      padding: 12px;
+    }
+
+    .sales-history-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sales-history-card h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sales-list-log {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .sale-log-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .sale-log-item:hover { background: var(--surface-3); }
+    .sale-log-item .time { color: var(--muted); font-size: 11px; }
+    .sale-log-item .badge-momo {
+      background: #FEE799;
+      color: #724C00;
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 2px 5px;
+      border-radius: 4px;
+      margin-left: 4px;
+    }
+    .sale-log-item .badge-cash {
+      background: #D9F1DF;
+      color: #1A6038;
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 2px 5px;
+      border-radius: 4px;
+      margin-left: 4px;
+    }
+
+    /* Outils Sauvegarde */
+    .data-tools-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn-backup {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--ink);
+    }
+
+    .btn-whatsapp-bilan {
+      background: #25D366;
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
+    }
+
+    /* ========================================================= */
+    /* BOTTOM NAVIGATION BAR                                     */
+    /* ========================================================= */
+    nav.bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: var(--surface);
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0 12px;
+      z-index: 100;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-tab {
+      background: none;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      flex: 1;
+      padding: 4px 0;
+    }
+
+    .nav-tab.active { color: var(--accent); font-weight: 700; }
+    .nav-tab .icon { font-size: 20px; line-height: 1; }
+    .nav-tab .dot-indicator {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: none;
+    }
+    .nav-tab.active .dot-indicator { display: block; }
+
+    /* ========================================================= */
+    /* MODALES & VUES DE VERROUILLAGE                            */
+    /* ========================================================= */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 19, 0.65);
+      backdrop-filter: blur(3px);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-content {
+      background: var(--surface);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      width: 100%;
+      max-width: 480px;
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 20px 18px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.25s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 18px;
+      font-family: 'Fraunces', serif;
+    }
+
+    .close-modal-btn {
+      background: var(--surface-2);
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .form-group input, .form-group select {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      font-size: 14.5px;
+      outline: none;
+    }
+    .form-group input:focus { border-color: var(--accent); }
+
+    .payment-modes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .mode-card {
+      border: 2px solid var(--line);
+      background: var(--surface-2);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .mode-card.selected {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    .quick-cash-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .btn-quick-val {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      padding: 10px 4px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+    .btn-quick-val:active { background: var(--surface-3); }
+
+    .monnaie-box {
+      background: #EAF5EF;
+      border: 1px solid #B8DEC7;
+      border-radius: var(--radius-md);
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .monnaie-box .lbl { font-size: 13px; font-weight: 600; color: #165636; }
+    .monnaie-box .val { font-size: 20px; font-weight: 700; color: #165636; }
+
+    .ticket-paper {
+      background: white;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      color: #222;
+    }
+
+    .ticket-paper .header { text-align: center; border-bottom: 1px dashed #bbb; padding-bottom: 8px; }
+    .ticket-paper .total-row { font-size: 15px; font-weight: 700; border-top: 1px dashed #222; padding-top: 4px; display: flex; justify-content: space-between; }
+
+    /* Impression / Export PDF Facture */
+    @media print {
+      body { background: white !important; }
+      body * { visibility: hidden !important; }
+      #modalReceipt, #modalReceipt * { visibility: visible !important; }
+      #modalReceipt {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        background: white !important;
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+      }
+      #modalReceipt .modal-content {
+        max-width: 100% !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      #modalReceipt .modal-header,
+      #modalReceipt button,
+      #modalReceipt .close-modal-btn {
+        display: none !important;
+      }
+      .ticket-paper {
+        border: 1px solid #999 !important;
+        max-width: 380px !important;
+        margin: 10px auto !important;
+        padding: 20px !important;
+        box-shadow: none !important;
+      }
+    }
+
+    .toast-msg {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-60px);
+      background: var(--ink);
+      color: white;
+      padding: 10px 18px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 10200;
+      box-shadow: var(--shadow-lg);
+      transition: transform 0.25s ease-out;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toast-msg.show { transform: translateX(-50%) translateY(0); }
+
+    .license-card-hero {
+      background: linear-gradient(145deg, #2E3831, #17211B);
+      color: white;
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .license-card-hero.expired {
+      background: linear-gradient(145deg, #B83E28, #751F10);
+    }
+    .license-id-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      background: rgba(255, 255, 255, 0.18);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      display: inline-block;
+      width: fit-content;
+    }
+
+    /* ========================================================= */
+    /* ÉCRAN DE SÉCURITÉ : CODE PIN À L'ENTRÉE (MOBILE-PERFECT) */
+    /* ========================================================= */
+    .pin-lock-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      background: #141C16;
+      color: white;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: env(safe-area-inset-top, 14px) 16px env(safe-area-inset-bottom, 14px);
+      box-sizing: border-box;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .pin-lock-overlay.hidden { display: none !important; }
+
+    .pin-card-inner {
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: clamp(14px, 3vh, 26px);
+      margin: auto 0;
+    }
+
+    .pin-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .pin-app-logo {
+      width: clamp(44px, 11vw, 52px);
+      height: clamp(44px, 11vw, 52px);
+      border-radius: 14px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(22px, 5.5vw, 26px);
+      box-shadow: 0 8px 20px rgba(27, 99, 68, 0.4);
+    }
+
+    .pin-shop-title {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(18px, 4.5vw, 22px);
+      margin: 0;
+      color: #FFFFFF;
+    }
+
+    .pin-sub-instruction {
+      font-size: 13px;
+      color: #98A79B;
+    }
+
+    /* Indicateurs ronds PIN */
+    .pin-dots-row {
+      display: flex;
+      gap: 16px;
+      margin: 12px 0 2px;
+    }
+
+    .pin-dot {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      background: transparent;
+      transition: all 0.15s;
+    }
+
+    .pin-dot.filled {
+      background: #4FA97C;
+      border-color: #4FA97C;
+      transform: scale(1.15);
+      box-shadow: 0 0 10px rgba(79, 169, 124, 0.6);
+    }
+
+    .pin-dot.error {
+      background: var(--danger);
+      border-color: var(--danger);
+      animation: shake 0.3s;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    /* Clavier Pavé Numérique */
+    .pin-keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(10px, 2.2vh, 16px) clamp(14px, 4vw, 22px);
+      width: 100%;
+      max-width: 270px;
+    }
+
+    .pin-key {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: white;
+      width: clamp(56px, 16vw, 66px);
+      height: clamp(56px, 16vw, 66px);
+      border-radius: 50%;
+      font-size: clamp(22px, 6vw, 26px);
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      user-select: none;
+      transition: background 0.1s, transform 0.08s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .pin-key:active {
+      background: rgba(255, 255, 255, 0.28);
+      transform: scale(0.92);
+    }
+
+    .pin-key.btn-action {
+      background: none;
+      border: none;
+      font-size: clamp(13px, 3.5vw, 15px);
+      font-weight: 600;
+      color: #98A79B;
+    }
+    .pin-key.btn-action:active {
+      color: white;
+      transform: scale(0.92);
+    }
+
+    .pin-footer-links {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .btn-forgot-pin {
+      background: none;
+      border: none;
+      color: #E5B25D;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 6px 12px;
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ========================================================= -->
+<!-- ÉCRAN DE SÉCURITÉ PIN (LOCK SCREEN)                       -->
+<!-- ========================================================= -->
+<div id="pinLockOverlay" class="pin-lock-overlay">
+  <div class="pin-card-inner">
+    <div class="pin-header">
+      <div class="pin-app-logo">🔒</div>
+      <h2 class="pin-shop-title" id="pinLockShopName">Boutique Mimi</h2>
+      <div class="pin-sub-instruction" id="pinPromptMsg">Entrez votre code PIN de caisse</div>
+
+      <!-- 4 Ronds Indicateurs -->
+      <div class="pin-dots-row">
+        <div class="pin-dot" id="dot1"></div>
+        <div class="pin-dot" id="dot2"></div>
+        <div class="pin-dot" id="dot3"></div>
+        <div class="pin-dot" id="dot4"></div>
+      </div>
+    </div>
+
+    <!-- Pavé Numérique Tactile -->
+    <div class="pin-keypad">
+      <button class="pin-key num" onclick="pressPinDigit('1')">1</button>
+      <button class="pin-key num" onclick="pressPinDigit('2')">2</button>
+      <button class="pin-key num" onclick="pressPinDigit('3')">3</button>
+
+      <button class="pin-key num" onclick="pressPinDigit('4')">4</button>
+      <button class="pin-key num" onclick="pressPinDigit('5')">5</button>
+      <button class="pin-key num" onclick="pressPinDigit('6')">6</button>
+
+      <button class="pin-key num" onclick="pressPinDigit('7')">7</button>
+      <button class="pin-key num" onclick="pressPinDigit('8')">8</button>
+      <button class="pin-key num" onclick="pressPinDigit('9')">9</button>
+
+      <button class="pin-key btn-action" onclick="clearPinInput()">C</button>
+      <button class="pin-key num" onclick="pressPinDigit('0')">0</button>
+      <button class="pin-key btn-action" onclick="deletePinDigit()">⌫</button>
+    </div>
+
+    <div class="pin-footer-links">
+      <button class="btn-forgot-pin" onclick="openForgotPinModal()">❓ Code PIN oublié ?</button>
+      <div style="font-size:11px; color:#6B7A6E;">Caisse Boutique Sécurisée · Cameroun</div>
+    </div>
+  </div>
+</div>
+
+<div class="app-container">
+
+  <!-- Entête de l'application -->
+  <header class="app-header">
+    <div class="shop-meta">
+      <h1 id="headerShopName">Boutique Mimi <button class="edit-shop-btn" onclick="openShopSettings()" title="Modifier le nom">✏️</button></h1>
+      <div class="badges-row">
+        <div class="status-badge"><span class="dot"></span> Hors-ligne</div>
+        <div id="trialBadgeEl" class="trial-badge" onclick="openLicenseModal()">
+          <span>⏳ Essai : 14j</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="pill-btn" onclick="lockAppNow()" title="Verrouiller la caisse">🔒</button>
+      <button class="pill-btn" onclick="openLicenseModal()">⭐ Pro</button>
+      <button class="pill-btn" onclick="openShopSettings()">⚙️</button>
+    </div>
+  </header>
+
+  <!-- Zone de contenu principal -->
+  <main class="view-container">
+
+    <!-- VUE 1 : VENTE (POS) -->
+    <section id="viewVente" class="view active">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchProductInput" placeholder="Rechercher un produit..." oninput="filterProducts()">
+      </div>
+
+      <div class="products-grid" id="productsGrid"></div>
+
+      <div class="cart-drawer">
+        <div class="cart-head">
+          <h3>🛒 Panier en cours <span id="cartCountBadge" class="num" style="color:var(--accent); font-weight:700;">(0)</span></h3>
+          <button class="pill-btn" onclick="clearCart()" style="padding:4px 8px;">Effacer</button>
+        </div>
+
+        <div class="cart-items-list" id="cartItemsList">
+          <div class="cart-empty-msg">Tapez sur un produit ci-dessus pour l'ajouter au panier.</div>
+        </div>
+
+        <div class="cart-total-bar">
+          <span class="label">Total à payer</span>
+          <span class="value num" id="cartTotalVal">0 FCFA</span>
+        </div>
+
+        <div class="cart-actions">
+          <button class="btn-checkout" id="btnCheckout" onclick="openCheckoutModal()" disabled>
+            💰 Encaisser la vente
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VUE 2 : STOCK -->
+    <section id="viewStock" class="view">
+      <div class="stock-top-summary">
+        <div class="stat-card">
+          <span class="val num" id="stockTotalArticles">0</span>
+          <span class="lbl">Articles</span>
+        </div>
+        <div class="stat-card danger">
+          <span class="val num" id="stockCritiqueCount">0</span>
+          <span class="lbl">En Alerte</span>
+        </div>
+        <div class="stat-card">
+          <span class="val num" id="stockValeurTotale">0</span>
+          <span class="lbl">Valeur (F)</span>
+        </div>
+      </div>
+
+      <div class="stock-actions-bar" style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn-add-product" style="flex:1; min-width:130px;" onclick="openAddProductModal()">
+          ➕ Nouvel article
+        </button>
+        <button class="btn-add-product" style="flex:1; min-width:130px; background:#4338CA;" onclick="openTemplatesModal()">
+          🏪 Modèles d'activité
+        </button>
+        <button class="pill-btn" style="color:var(--danger); border-color:rgba(184,62,40,0.3); padding:8px 12px;" onclick="confirmClearAllProducts()" title="Vider tout le catalogue">
+          🗑️ Vider
+        </button>
+      </div>
+
+      <div class="stock-list" id="stockItemsList"></div>
+    </section>
+
+    <!-- VUE 3 : BILAN -->
+    <section id="viewBilan" class="view">
+      <!-- Sélecteur de période interactif -->
+      <div class="period-selector">
+        <button class="period-pill active" id="periodBtnToday" onclick="setBilanPeriod('today', this)">Aujourd'hui</button>
+        <button class="period-pill" id="periodBtnWeek" onclick="setBilanPeriod('week', this)">7 Jours</button>
+        <button class="period-pill" id="periodBtnMonth" onclick="setBilanPeriod('month', this)">30 Jours</button>
+        <button class="period-pill" id="periodBtnAll" onclick="setBilanPeriod('all', this)">Tout</button>
+      </div>
+
+      <div class="hero-kpi">
+        <span class="label" id="bilanHeroLabel">Ventes d'aujourd'hui</span>
+        <div class="amount num" id="bilanCaJour">0 FCFA</div>
+        <div class="versus-container">
+          <span id="bilanVersusBadge" class="versus-badge neutral" style="display:none;">
+            <span>—</span>
+          </span>
+        </div>
+        <div class="kpi-sub">
+          <span id="bilanNbVentes">0 vente(s)</span>
+          <span id="bilanPanierMoyen">Panier moy. : 0 FCFA</span>
+        </div>
+      </div>
+
+      <div class="dashboard-splits">
+        <div class="split-card">
+          <span class="split-title">💵 Espèces</span>
+          <span class="split-val num" id="bilanEspecesTotal">0 FCFA</span>
+        </div>
+        <div class="split-card">
+          <span class="split-title">📱 Mobile Money</span>
+          <span class="split-val num" id="bilanMomoTotal">0 FCFA</span>
+        </div>
+      </div>
+
+      <!-- Section Top 5 Produits vendus -->
+      <div class="top-products-card">
+        <div class="top-prods-head">
+          <h3>🏆 Top Produits Vendus</h3>
+          <span class="period-sub-label" id="topProdsPeriodLabel">Aujourd'hui</span>
+        </div>
+        <div id="topProductsList" class="top-products-list">
+          <div class="cart-empty-msg">Aucune vente sur cette période.</div>
+        </div>
+      </div>
+
+      <div id="bilanAlertBox" class="danger-alert-box" style="display:none;">
+        <span class="icon">⚠️</span>
+        <span class="txt" id="bilanAlertTxt">Produits en stock critique !</span>
+      </div>
+
+      <!-- Rappel de sauvegarde de données -->
+      <div id="bilanBackupReminder" class="backup-reminder-card" style="display:none;">
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <span style="font-size:22px;">💾</span>
+          <div style="flex:1;">
+            <div style="font-size:12.5px; font-weight:700; color:#1B6344;">Pensez à sauvegarder vos ventes !</div>
+            <div style="font-size:11.5px; color:#2E7D32; line-height:1.4; margin-top:3px;" id="bilanBackupTxt">
+              En cas de perte ou changement de téléphone, votre fichier garantit zéro perte de données.
+            </div>
+            <button class="pill-btn" style="margin-top:8px; background:#1B6344; color:white; border:none; padding:7px 12px; font-size:11.5px; font-weight:700; cursor:pointer;" onclick="exportDataBackup()">
+              ⬇️ Télécharger ma sauvegarde (.json)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sales-history-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+          <h3 style="margin:0;">
+            <span id="salesLogTitle">📜 Ventes de la période</span>
+            <span style="font-size:11px; font-weight:normal; color:var(--muted);" id="salesLogCount">0 vente</span>
+          </h3>
+          <span style="font-size:11px; color:var(--muted);">Cliquez sur une facture pour l'ouvrir</span>
+        </div>
+
+        <!-- Barre de recherche de factures dans l'historique -->
+        <div style="display:flex; flex-direction:column; gap:6px; margin:6px 0;">
+          <div class="search-box" style="margin:0; background:var(--surface-2);">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchSalesLogInput" placeholder="N° facture (ex: VTE-100), article, montant..." oninput="filterSalesLog()">
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="period-pill active" id="btnFilterSalesAll" style="padding:4px 8px; font-size:10.5px;" onclick="setSalesLogPaymentFilter('all', this)">Toutes</button>
+            <button class="period-pill" id="btnFilterSalesCash" style="padding:4px 8px; font-size:10.5px;" onclick="setSalesLogPaymentFilter('especes', this)">💵 Espèces</button>
+            <button class="period-pill" id="btnFilterSalesMomo" style="padding:4px 8px; font-size:10.5px;" onclick="setSalesLogPaymentFilter('momo', this)">📱 MoMo</button>
+          </div>
+        </div>
+
+        <div class="sales-list-log" id="salesLogList">
+          <div class="cart-empty-msg">Aucune vente enregistrée sur cette période.</div>
+        </div>
+      </div>
+
+      <div class="data-tools-card">
+        <h3 style="margin:0; font-size:14px;">📦 Gestion & Partage</h3>
+        <button class="btn-whatsapp-bilan" id="btnShareBilanWhatsapp" onclick="shareBilanWhatsApp()">
+          📲 Envoyer le rapport sur WhatsApp
+        </button>
+        <button class="btn-backup" onclick="exportDataBackup()">
+          💾 Télécharger une sauvegarde des données (.json)
+        </button>
+        <button class="btn-backup" onclick="document.getElementById('importFileInput').click()">
+          📂 Restaurer une sauvegarde
+        </button>
+        <input type="file" id="importFileInput" style="display:none;" accept=".json" onchange="importDataBackup(event)">
+        <button class="btn-backup" onclick="openTemplatesModal()">
+          🏪 Charger un modèle d'activité (Épicerie, Bar...)
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- NAVIGATION INFÉRIEURE -->
+  <nav class="bottom-nav">
+    <button class="nav-tab active" onclick="switchView('viewVente', this)">
+      <span class="icon">🛒</span>
+      <span>Caisse</span>
+      <span class="dot-indicator"></span>
+    </button>
+    <button class="nav-tab" onclick="switchView('viewStock', this)">
+      <span class="icon">📦</span>
+      <span>Stock</span>
+      <span class="dot-indicator"></span>
+    </button>
+    <button class="nav-tab" onclick="switchView('viewBilan', this)">
+      <span class="icon">📊</span>
+      <span>Bilan</span>
+      <span class="dot-indicator"></span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- ========================================================= -->
+<!-- MODAL : MOT DE PASSE / PIN OUBLIÉ                         -->
+<!-- ========================================================= -->
+<div class="modal-overlay" id="modalForgotPin" style="z-index: 10050;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Récupération du Code PIN</h2>
+      <button class="close-modal-btn" onclick="closeModal('modalForgotPin')">✕</button>
+    </div>
+
+    <div style="font-size:13px; color:var(--muted); line-height:1.45;">
+      Pour la sécurité de votre caisse contre le vol ou les manipulations d'employés, seul votre <strong>agent support</strong> peut réinitialiser votre code.
+    </div>
+
+    <div class="license-card-hero">
+      <div style="font-size:11px; opacity:0.8; text-transform:uppercase;">Votre Référence Boutique</div>
+      <div class="license-id-badge" id="forgotShopIdDisplay">CB-0000</div>
+      <div style="font-size:12px; opacity:0.9;">Communiquez cette référence à votre agent support.</div>
+    </div>
+
+    <button class="btn-whatsapp-bilan" onclick="askAgentForResetPin()">
+      📲 Demander le code de secours à l'agent support
+    </button>
+
+    <div class="form-group" style="border-top:1px solid var(--line); padding-top:12px;">
+      <label>Code de secours remis par l'agent support</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="resetPinCodeInput" placeholder="Code à 6 chiffres" style="flex:1; font-family:'IBM Plex Mono', monospace; font-size:16px; font-weight:700;">
+        <button class="btn-checkout" style="flex:none; padding:10px 16px;" onclick="applyMasterResetPin()">
+          Réinitialiser
+        </button>
+      </div>
+      <span style="font-size:11px; color:var(--muted);">Le code remis remettra votre PIN à <strong>1234</strong>.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- MODAL : GESTION ABONNEMENT & VERROUILLAGE (LICENCE)        -->
+<!-- ========================================================= -->
+<div class="modal-overlay" id="modalLicense">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="licenseModalTitle">Abonnement & Licence</h2>
+      <button class="close-modal-btn" id="closeLicenseBtn" onclick="closeModal('modalLicense')">✕</button>
+    </div>
+
+    <div class="license-card-hero" id="licenseHeroCard">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; opacity:0.85; text-transform:uppercase;">Identifiant Boutique</span>
+        <span class="license-id-badge" id="licenseShopId">CB-0000</span>
+      </div>
+      <div style="font-size:22px; font-weight:700;" id="licenseStatusText">Essai gratuit actif</div>
+      <div style="font-size:12.5px; opacity:0.9;" id="licenseSubDetail">Il vous reste 14 jours d'essai.</div>
+    </div>
+
+    <!-- Grille des 3 Formules Tarifaires -->
+    <div style="font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-top:10px;">
+      Nos Formules d'Abonnement
+    </div>
+    
+    <div class="pricing-plans-grid" style="display:flex; flex-direction:column; gap:8px; margin:6px 0 12px 0;">
+      <!-- Formule 1 : Essentiel (2 500 F) -->
+      <div class="pricing-card" style="border:1px solid var(--line); border-radius:var(--radius-md); padding:10px; background:var(--surface);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:13px; font-weight:700; color:var(--ink);">📦 Formule Essentiel</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:2px;">Caisse tactile, gestion de stock & reçus WhatsApp</div>
+          </div>
+          <div style="text-align:right; min-width:75px;">
+            <span class="num" style="font-size:15px; font-weight:800; color:#1B6344;">2 500 F</span>
+            <span style="font-size:10px; color:var(--muted); display:block;">/ mois</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formule 2 : Pro + Analyse (4 000 F) -->
+      <div class="pricing-card" style="border:1.5px solid var(--accent); border-radius:var(--radius-md); padding:10px; background:#F0FDF4;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div style="display:flex; align-items:center; gap:5px;">
+              <span style="font-size:13px; font-weight:700; color:var(--accent);">⭐ Formule Pro + Analyse</span>
+              <span style="background:#1B6344; color:white; font-size:8.5px; font-weight:700; padding:1px 4px; border-radius:4px;">POPULAIRE</span>
+            </div>
+            <div style="font-size:11px; color:#2E7D32; margin-top:2px; line-height:1.35;">
+              Tout l'Essentiel + Bilan 7j/30j, Comparatifs Versus & Top 5 produits
+            </div>
+          </div>
+          <div style="text-align:right; min-width:75px;">
+            <span class="num" style="font-size:15px; font-weight:800; color:var(--accent);">4 000 F</span>
+            <span style="font-size:10px; color:var(--muted); display:block;">/ mois</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formule 3 : Multi-Boutiques (Réseau) -->
+      <div class="pricing-card" style="border:1px dashed #4338CA; border-radius:var(--radius-md); padding:10px; background:#EEF2FF;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <div>
+            <div style="font-size:13px; font-weight:700; color:#3730A3;">🏢 Multi-Boutiques & Réseau</div>
+            <div style="font-size:11px; color:#4B5563; margin-top:2px;">Gestion centralisée à distance pour propriétaires multi-points de vente</div>
+          </div>
+          <button class="pill-btn" style="background:#4338CA; color:white; border:none; padding:6px 10px; font-size:11px; font-weight:700; white-space:nowrap;" onclick="contactSupportMultiBoutiques()">
+            Contacter le support
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-whatsapp-bilan" onclick="contactAgentForRenewal()">
+      📲 Contacter l'agent support pour renouveler
+    </button>
+
+    <div class="form-group" style="border-top:1px solid var(--line); padding-top:12px;">
+      <label>Activer avec un code de recharge</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="activationCodeInput" placeholder="Code à 6 chiffres..." style="flex:1; font-family:'IBM Plex Mono', monospace; font-size:16px; font-weight:700; text-transform:uppercase;">
+        <button class="btn-checkout" style="flex:none; padding:10px 16px;" onclick="applyActivationCode()">
+          Valider
+        </button>
+      </div>
+      <span style="font-size:11px; color:var(--muted);">Code remis par l'agent support après règlement de votre formule.</span>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL : ENCAISSEMENT -->
+<div class="modal-overlay" id="modalCheckout">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Encaisser la vente</h2>
+      <button class="close-modal-btn" onclick="closeModal('modalCheckout')">✕</button>
+    </div>
+
+    <div style="text-align:center; padding:10px 0;">
+      <div style="font-size:12px; color:var(--muted); text-transform:uppercase;">Montant à percevoir</div>
+      <div class="num" style="font-size:32px; font-weight:700; color:var(--accent);" id="modalTotalToPay">0 FCFA</div>
+    </div>
+
+    <div class="form-group">
+      <label>Mode de paiement</label>
+      <div class="payment-modes">
+        <div class="mode-card selected" id="modeCashCard" onclick="selectPaymentMode('especes')">
+          <span style="font-size:20px;">💵</span>
+          <span>Espèces</span>
+        </div>
+        <div class="mode-card" id="modeMomoCard" onclick="selectPaymentMode('momo')">
+          <span style="font-size:20px;">📱</span>
+          <span>Mobile Money</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="sectionCash">
+      <div class="form-group">
+        <label>Montant reçu du client (FCFA)</label>
+        <input type="number" id="cashReceivedInput" placeholder="Ex: 5000" oninput="calculateChange()">
+      </div>
+
+      <div class="quick-cash-grid">
+        <button class="btn-quick-val" onclick="setExactCash()">Montant exact</button>
+        <button class="btn-quick-val" onclick="addQuickCash(1000)">1 000 F</button>
+        <button class="btn-quick-val" onclick="addQuickCash(2000)">2 000 F</button>
+        <button class="btn-quick-val" onclick="addQuickCash(5000)">5 000 F</button>
+        <button class="btn-quick-val" onclick="addQuickCash(10000)">10 000 F</button>
+        <button class="btn-quick-val" onclick="addQuickCash(20000)">20 000 F</button>
+      </div>
+
+      <div class="monnaie-box" style="margin-top:12px;">
+        <span class="lbl">Monnaie à rendre</span>
+        <span class="val num" id="changeAmountVal">0 FCFA</span>
+      </div>
+    </div>
+
+    <div id="sectionMomo" style="display:none;">
+      <div class="form-group">
+        <label>Opérateur</label>
+        <select id="momoOperatorSelect">
+          <option value="MTN MoMo">MTN Mobile Money</option>
+          <option value="Orange Money">Orange Money</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>N° Téléphone ou Réf. Client (optionnel)</label>
+        <input type="text" id="momoRefInput" placeholder="Ex: 699 00 11 22">
+      </div>
+    </div>
+
+    <button class="btn-checkout" style="margin-top:8px; padding:15px;" onclick="confirmSale()">
+      ✅ Valider & Enregistrer la vente
+    </button>
+  </div>
+</div>
+
+<!-- MODAL : REÇU DE VENTE -->
+<div class="modal-overlay" id="modalReceipt">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Reçu de vente</h2>
+      <button class="close-modal-btn" onclick="closeModal('modalReceipt')">✕</button>
+    </div>
+
+    <div class="ticket-paper" id="receiptPaper"></div>
+
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <button class="btn-checkout" style="background:#1B6344; color:white; padding:12px 16px;" onclick="printOrDownloadReceiptPDF()">
+        📄 Imprimer / Télécharger la Facture PDF
+      </button>
+      <button class="btn-whatsapp-bilan" onclick="shareReceiptWhatsApp()">
+        📲 Partager le reçu par WhatsApp (Texte)
+      </button>
+      <button class="btn-backup" onclick="closeModal('modalReceipt')">
+        ➕ Nouvelle vente
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL : AJOUTER UN PRODUIT -->
+<div class="modal-overlay" id="modalAddProduct">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Nouvel article</h2>
+      <button class="close-modal-btn" onclick="closeModal('modalAddProduct')">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label>Nom de l'article *</label>
+      <input type="text" id="newProdName" placeholder="Ex: Savon liquide 500ml">
+    </div>
+
+    <div class="form-group">
+      <label>Prix de vente (FCFA) *</label>
+      <input type="number" id="newProdPrice" placeholder="Ex: 1200">
+    </div>
+
+    <div class="form-group">
+      <label>Quantité initiale en stock *</label>
+      <input type="number" id="newProdStock" placeholder="Ex: 20" value="10">
+    </div>
+
+    <div class="form-group">
+      <label>Seuil d'alerte (stock bas) *</label>
+      <input type="number" id="newProdAlert" placeholder="Ex: 5" value="5">
+    </div>
+
+    <button class="btn-checkout" style="margin-top:8px;" onclick="saveNewProduct()">
+      💾 Enregistrer l'article
+    </button>
+  </div>
+</div>
+
+<!-- MODAL : PARAMÈTRES BOUTIQUE -->
+<div class="modal-overlay" id="modalSettings">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Paramètres de la boutique</h2>
+      <button class="close-modal-btn" onclick="closeModal('modalSettings')">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label>Nom de votre boutique</label>
+      <input type="text" id="settingShopName" placeholder="Ex: Boutique Mimi">
+    </div>
+
+    <div class="form-group">
+      <label>Ville / Quartier</label>
+      <input type="text" id="settingShopLocation" placeholder="Ex: Douala, Ndogbong">
+    </div>
+
+    <div class="form-group">
+      <label>Numéro WhatsApp de la boutique</label>
+      <input type="tel" id="settingShopPhone" placeholder="Ex: 699 00 00 00">
+    </div>
+
+    <div class="form-group">
+      <label>N° Identifiant Unique (NIU)</label>
+      <input type="text" id="settingShopNiu" placeholder="Ex: M052012345678A" style="text-transform:uppercase; font-family:'IBM Plex Mono', monospace; font-weight:600;">
+      <span style="font-size:11px; color:var(--muted);">Affiché sur vos reçus et factures PDF conformes.</span>
+    </div>
+
+    <!-- Section Sécurité Code PIN -->
+    <div style="border-top:1px solid var(--line); padding-top:12px; display:flex; flex-direction:column; gap:8px;">
+      <label style="font-size:11.5px; font-weight:700; color:var(--muted); text-transform:uppercase;">Sécurité Code PIN</label>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:13px;">Code PIN actuel : <strong id="currentPinPreview">1234</strong></span>
+        <button class="pill-btn" onclick="changePinPrompt()">✏️ Modifier PIN</button>
+      </div>
+    </div>
+
+    <!-- Section Outils Agent (Calculateurs spécifiques à la boutique) -->
+    <details style="margin-top:10px; border:1px solid var(--line); border-radius:var(--radius-sm); padding:10px; background:var(--surface-2);">
+      <summary style="font-size:12px; font-weight:700; cursor:pointer; color:var(--accent);">
+        🔑 Espace Agent Terrain
+      </summary>
+      <div style="margin-top:10px; display:flex; flex-direction:column; gap:8px; font-size:12px;">
+        <p style="margin:0; color:var(--muted);">Générer les codes uniques pour une boutique partenaire :</p>
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="adminCalcShopId" placeholder="ID Boutique (ex: CB-1234)" style="padding:6px; font-size:12px; flex:1;">
+          <button class="pill-btn" onclick="adminCalculateCode()">Calculer</button>
+        </div>
+        <div id="adminCalcResult" style="font-weight:700; color:var(--accent); font-family:'IBM Plex Mono', monospace; font-size:11.5px; line-height:1.5;"></div>
+      </div>
+    </details>
+
+    <div style="border-top:1px solid var(--line); padding-top:12px; margin-top:10px;">
+      <label style="font-size:11.5px; font-weight:700; color:var(--muted); text-transform:uppercase;">Changer d'activité métier</label>
+      <button class="pill-btn" style="width:100%; margin-top:6px; background:#EEF2FF; color:#4338CA; border:1px solid #C7D2FE; font-weight:700; padding:9px;" onclick="closeModal('modalSettings'); openTemplatesModal();">
+        🏪 Choisir un modèle métier (Épicerie, Bar, Cosmétique...)
+      </button>
+    </div>
+
+    <button class="btn-checkout" style="margin-top:12px;" onclick="saveShopSettings()">
+      💾 Sauvegarder les paramètres
+    </button>
+  </div>
+</div>
+<!-- ========================================================= -->
+<!-- MODAL : MODÈLES D'ACTIVITÉ (TEMPLATES MÉTIERS)            -->
+<!-- ========================================================= -->
+<div class="modal-overlay" id="modalTemplates" style="z-index: 10040;">
+  <div class="modal-content" style="max-height: 90vh;">
+    <div class="modal-header">
+      <h2>🏪 Modèles d'activité</h2>
+      <button class="close-modal-btn" onclick="closeModal('modalTemplates')">✕</button>
+    </div>
+
+    <p style="font-size:12.5px; color:var(--muted); margin:0 0 12px 0; line-height:1.4;">
+      Choisissez votre secteur au Cameroun pour remplir automatiquement votre caisse avec les articles courants et prix moyens :
+    </p>
+
+    <div class="template-grid">
+      <button class="template-card" onclick="applyActivityTemplate('epicerie')">
+        <span class="t-icon">🛒</span>
+        <div class="t-info">
+          <span class="t-title">Épicerie & Alimentation Générale</span>
+          <span class="t-desc">Riz blanc, Huile 1L, Sucre, Savon ménage, Tomates, Lait, Sardines, Spaghetti, Pain, Eau...</span>
+          <span class="t-count">12 articles prêts à vendre</span>
+        </div>
+      </button>
+
+      <button class="template-card" onclick="applyActivityTemplate('boissons')">
+        <span class="t-icon">🍺</span>
+        <div class="t-info">
+          <span class="t-title">Dépôt de Boissons & Bar / Cave</span>
+          <span class="t-desc">33 Export, Castel, Beaufort, Guinness, Kadji, Top, Booster... (en Bouteilles à l'unité ET en Casiers)</span>
+          <span class="t-count">18 articles (bouteilles & casiers)</span>
+        </div>
+      </button>
+
+      <button class="template-card" onclick="applyActivityTemplate('cosmetique')">
+        <span class="t-icon">💄</span>
+        <div class="t-info">
+          <span class="t-title">Cosmétique, Beauté & Mèches</span>
+          <span class="t-desc">Savon gommant carotte, Lait hydratant, Mèche brésilienne, Huile coco, Pommade karité, Maquillage...</span>
+          <span class="t-count">10 articles cosmétiques</span>
+        </div>
+      </button>
+
+      <button class="template-card" onclick="applyActivityTemplate('sante')">
+        <span class="t-icon">💊</span>
+        <div class="t-info">
+          <span class="t-title">Parapharmacie & Proxi-Santé</span>
+          <span class="t-desc">Paracétamol 500/1000mg, Vitamine C, Pansements, Bétadine, Alcool 70°, Sérum phy, Coton...</span>
+          <span class="t-count">10 articles santé courante</span>
+        </div>
+      </button>
+
+      <button class="template-card" onclick="applyActivityTemplate('quincaillerie')">
+        <span class="t-icon">⚡</span>
+        <div class="t-info">
+          <span class="t-title">Quincaillerie & Électricité</span>
+          <span class="t-desc">Ciment 50kg, Pointes, Ampoules LED 12W, Câble 1.5, Interrupteurs, Rallonges, Peinture, Cadenas...</span>
+          <span class="t-count">10 articles quincaillerie</span>
+        </div>
+      </button>
+
+      <button class="template-card" style="border-style:dashed; background:transparent;" onclick="applyActivityTemplate('vide')">
+        <span class="t-icon">⚪</span>
+        <div class="t-info">
+          <span class="t-title">Catalogue Vierge (0 article)</span>
+          <span class="t-desc">Pour saisir vous-même 100% de vos propres produits de A à Z.</span>
+          <span class="t-count" style="color:var(--muted);">Page blanche</span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast-msg" id="toastMsg">Notification</div>
+
+<!-- ========================================================= -->
+<!-- JAVASCRIPT DU LOGICIEL                                    -->
+<!-- ========================================================= -->
+<script>
+  const DEFAULT_PRODUCTS = [
+    { id: 'p1', name: 'Riz blanc 5kg', price: 3500, stock: 18, alertThreshold: 5 },
+    { id: 'p2', name: 'Huile raffinée 1L', price: 1800, stock: 3, alertThreshold: 5 },
+    { id: 'p3', name: 'Savon ménage', price: 500, stock: 40, alertThreshold: 10 },
+    { id: 'p4', name: 'Sucre en poudre 1kg', price: 900, stock: 25, alertThreshold: 8 },
+    { id: 'p5', name: 'Tomates fraîches (seau)', price: 1000, stock: 14, alertThreshold: 5 },
+    { id: 'p6', name: 'Lait en poudre (boîte)', price: 2200, stock: 11, alertThreshold: 6 },
+    { id: 'p7', name: 'Boîte d\'œufs (x6)', price: 1200, stock: 4, alertThreshold: 6 },
+    { id: 'p8', name: 'Pain baguette', price: 400, stock: 30, alertThreshold: 10 },
+    { id: 'p9', name: 'Jus de Bissap 1L', price: 700, stock: 12, alertThreshold: 5 },
+    { id: 'p10', name: 'Eau minérale 1.5L', price: 500, stock: 20, alertThreshold: 5 }
+  ];
+
+  const ACTIVITY_TEMPLATES = {
+    epicerie: {
+      name: "Épicerie & Alimentation Générale",
+      products: [
+        { name: 'Riz blanc 5kg', price: 3500, stock: 20, alertThreshold: 5 },
+        { name: 'Huile raffinée Mayor 1L', price: 1800, stock: 15, alertThreshold: 4 },
+        { name: 'Sucre en poudre SOSUCAM 1kg', price: 900, stock: 25, alertThreshold: 6 },
+        { name: 'Savon ménage BF', price: 500, stock: 40, alertThreshold: 10 },
+        { name: 'Boîte de lait Nido 400g', price: 2200, stock: 12, alertThreshold: 4 },
+        { name: 'Tomates fraîches (seau)', price: 1000, stock: 10, alertThreshold: 3 },
+        { name: 'Boîte de sardines Titus', price: 600, stock: 30, alertThreshold: 8 },
+        { name: 'Pâtes Spaghetti 500g', price: 550, stock: 35, alertThreshold: 8 },
+        { name: 'Boîte d\'œufs (x6)', price: 1200, stock: 15, alertThreshold: 5 },
+        { name: 'Pain baguette', price: 400, stock: 25, alertThreshold: 8 },
+        { name: 'Eau minérale Supermont 1.5L', price: 500, stock: 24, alertThreshold: 6 },
+        { name: 'Mayonnaise pot Calvé', price: 1300, stock: 10, alertThreshold: 3 }
+      ]
+    },
+    boissons: {
+      name: "Dépôt de Boissons & Bar / Cave",
+      products: [
+        { name: '33 Export (Bouteille 65cl)', price: 650, stock: 48, alertThreshold: 12 },
+        { name: 'Casier 33 Export (12 btlles)', price: 6500, stock: 10, alertThreshold: 3 },
+        { name: 'Castel Beer (Bouteille 65cl)', price: 650, stock: 36, alertThreshold: 12 },
+        { name: 'Casier Castel Beer (12 btlles)', price: 6500, stock: 8, alertThreshold: 2 },
+        { name: 'Beaufort Lager (Bouteille 50cl)', price: 800, stock: 40, alertThreshold: 10 },
+        { name: 'Casier Beaufort Lager (12 btlles)', price: 8000, stock: 6, alertThreshold: 2 },
+        { name: 'Guinness Petite (Bouteille 33cl)', price: 850, stock: 30, alertThreshold: 8 },
+        { name: 'Casier Guinness (24 btlles)', price: 9500, stock: 6, alertThreshold: 2 },
+        { name: 'Kadji Beer (Bouteille 65cl)', price: 750, stock: 24, alertThreshold: 6 },
+        { name: 'Casier Kadji Beer (12 btlles)', price: 7500, stock: 5, alertThreshold: 2 },
+        { name: 'Top Ananas / Grenadine (Bouteille)', price: 500, stock: 36, alertThreshold: 10 },
+        { name: 'Pack Top Ananas / Grenadine (12 btlles)', price: 5000, stock: 6, alertThreshold: 2 },
+        { name: 'Booster Cidre / Whisky (Bouteille)', price: 700, stock: 30, alertThreshold: 8 },
+        { name: 'Casier Booster (12 btlles)', price: 7000, stock: 5, alertThreshold: 2 },
+        { name: 'Eau Tangui 1.5L (Bouteille)', price: 500, stock: 40, alertThreshold: 12 },
+        { name: 'Pack Eau Tangui 1.5L (x6)', price: 2500, stock: 12, alertThreshold: 4 },
+        { name: 'Malta Guinness (Bouteille)', price: 600, stock: 30, alertThreshold: 8 },
+        { name: 'Vin rouge en brique 1L', price: 2500, stock: 10, alertThreshold: 3 }
+      ]
+    },
+    cosmetique: {
+      name: "Cosmétique, Beauté & Mèches",
+      products: [
+        { name: 'Savon gommant carotte', price: 1500, stock: 20, alertThreshold: 5 },
+        { name: 'Lait corporel éclaircissant 400ml', price: 3500, stock: 12, alertThreshold: 3 },
+        { name: 'Mèche brésilienne naturelle', price: 8000, stock: 8, alertThreshold: 2 },
+        { name: 'Huile de coco pure 250ml', price: 2000, stock: 15, alertThreshold: 4 },
+        { name: 'Pommade capillaire Karité', price: 1200, stock: 18, alertThreshold: 4 },
+        { name: 'Rouge à lèvres mat longue tenue', price: 1000, stock: 25, alertThreshold: 6 },
+        { name: 'Vernis à ongles tendance', price: 500, stock: 30, alertThreshold: 8 },
+        { name: 'Gel douche exfoliant 1L', price: 3000, stock: 10, alertThreshold: 3 },
+        { name: 'Déodorant spray fraîcheur', price: 2000, stock: 14, alertThreshold: 4 },
+        { name: 'Paquet cotons démaquillants', price: 800, stock: 20, alertThreshold: 5 }
+      ]
+    },
+    sante: {
+      name: "Parapharmacie & Proxi-Santé",
+      products: [
+        { name: 'Paracétamol 500mg (plaquette)', price: 300, stock: 50, alertThreshold: 15 },
+        { name: 'Paracétamol 1000mg Effervescent', price: 1000, stock: 25, alertThreshold: 6 },
+        { name: 'Vitamine C 500mg (plaquette)', price: 500, stock: 30, alertThreshold: 8 },
+        { name: 'Alcool 70° (flacon 250ml)', price: 1200, stock: 15, alertThreshold: 4 },
+        { name: 'Bétadine dermique (flacon)', price: 2500, stock: 10, alertThreshold: 3 },
+        { name: 'Boîte de pansements adhésifs', price: 1000, stock: 20, alertThreshold: 5 },
+        { name: 'Rouleau coton hydrophile 100g', price: 800, stock: 25, alertThreshold: 5 },
+        { name: 'Sérum physiologique (dosette)', price: 300, stock: 40, alertThreshold: 10 },
+        { name: 'Baume chauffant massage', price: 1500, stock: 18, alertThreshold: 4 },
+        { name: 'Gel hydroalcoolique 100ml', price: 700, stock: 30, alertThreshold: 6 }
+      ]
+    },
+    quincaillerie: {
+      name: "Quincaillerie & Électricité",
+      products: [
+        { name: 'Sac Ciment Dangote 50kg', price: 5200, stock: 30, alertThreshold: 10 },
+        { name: 'Paquet de pointes 70mm (1kg)', price: 1500, stock: 25, alertThreshold: 5 },
+        { name: 'Ampoule LED 12W E27', price: 1000, stock: 40, alertThreshold: 10 },
+        { name: 'Câble électrique 1.5mm (100m)', price: 18000, stock: 6, alertThreshold: 2 },
+        { name: 'Interrupteur mural simple', price: 1200, stock: 20, alertThreshold: 5 },
+        { name: 'Prise murale 2P+T', price: 1500, stock: 20, alertThreshold: 5 },
+        { name: 'Rallonge multiprise 4 postes', price: 3500, stock: 12, alertThreshold: 3 },
+        { name: 'Peinture blanche acrylique 5kg', price: 7000, stock: 8, alertThreshold: 2 },
+        { name: 'Cadenas sécurité 50mm', price: 2500, stock: 15, alertThreshold: 4 },
+        { name: 'Ruban adhésif isolant', price: 500, stock: 35, alertThreshold: 8 }
+      ]
+    },
+    vide: {
+      name: "Catalogue Vierge",
+      products: []
+    }
+  };
+
+  const DEFAULT_SETTINGS = {
+    shopName: 'Boutique Mimi',
+    shopLocation: 'Douala, Cameroun',
+    shopPhone: '',
+    shopNiu: '',
+    pinCode: '1234' // Code PIN par défaut
+  };
+
+  const AGENT_WHATSAPP_SUPPORT = '15144311477'; // +1 514 431 1477
+
+  let products = [];
+  let sales = [];
+  let settings = {};
+  let license = null;
+  let cart = [];
+  let currentPaymentMode = 'especes';
+  let lastSaleRecorded = null;
+  let currentBilanPeriod = 'today'; // 'today', 'week', 'month', 'all'
+  let salesSearchQuery = '';
+  let salesPaymentFilter = 'all';
+
+  // État PIN
+  let enteredPin = '';
+  let isAppLocked = true;
+
+  function initApp() {
+    loadData();
+    initLicense();
+    renderProductsGrid();
+    renderCart();
+    renderStockView();
+    renderDashboard();
+    updateShopNameUI();
+    initPinLock();
+    checkExpirationLock();
+
+    // Rappel discret de sauvegarde au démarrage si plus de 3 ventes sans sauvegarde récente
+    setTimeout(() => {
+      const lastBackup = settings.lastBackupDate;
+      const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+      if (sales && sales.length >= 3 && (!lastBackup || (Date.now() - lastBackup > TWO_DAYS_MS))) {
+        showToast("💡 Pensez à sauvegarder vos données dans l'onglet Bilan !");
+      }
+    }, 3500);
+  }
+
+  function loadData() {
+    const savedProducts = localStorage.getItem('caisse_products');
+    const savedSales = localStorage.getItem('caisse_sales');
+    const savedSettings = localStorage.getItem('caisse_settings');
+
+    products = savedProducts ? JSON.parse(savedProducts) : [...DEFAULT_PRODUCTS];
+    sales = savedSales ? JSON.parse(savedSales) : [];
+    settings = savedSettings ? JSON.parse(savedSettings) : { ...DEFAULT_SETTINGS };
+
+    if (!settings.pinCode) settings.pinCode = '1234';
+    if (!savedProducts) saveData();
+  }
+
+  function saveData() {
+    localStorage.setItem('caisse_products', JSON.stringify(products));
+    localStorage.setItem('caisse_sales', JSON.stringify(sales));
+    localStorage.setItem('caisse_settings', JSON.stringify(settings));
+    if (license) localStorage.setItem('caisse_license', JSON.stringify(license));
+  }
+
+  function formatFCFA(val) {
+    return (val || 0).toLocaleString('fr-FR') + ' FCFA';
+  }
+
+  function showToast(text) {
+    const toast = document.getElementById('toastMsg');
+    toast.textContent = text;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  }
+
+  // =========================================================
+  // GESTION DU CODE PIN & SÉCURITÉ
+  // =========================================================
+  function initPinLock() {
+    isAppLocked = true;
+    enteredPin = '';
+    updatePinDots();
+    document.getElementById('pinLockShopName').textContent = settings.shopName || 'Boutique Mimi';
+    document.getElementById('pinLockOverlay').classList.remove('hidden');
+    document.getElementById('currentPinPreview').textContent = settings.pinCode || '1234';
+  }
+
+  function lockAppNow() {
+    enteredPin = '';
+    updatePinDots();
+    document.getElementById('pinPromptMsg').textContent = "Entrez votre code PIN de caisse";
+    document.getElementById('pinLockOverlay').classList.remove('hidden');
+    isAppLocked = true;
+    showToast("Caisse verrouillée 🔒");
+  }
+
+  function pressPinDigit(digit) {
+    if (enteredPin.length < 4) {
+      enteredPin += digit;
+      updatePinDots();
+
+      if (enteredPin.length === 4) {
+        setTimeout(verifyPin, 150);
+      }
+    }
+  }
+
+  function deletePinDigit() {
+    if (enteredPin.length > 0) {
+      enteredPin = enteredPin.slice(0, -1);
+      updatePinDots();
+    }
+  }
+
+  function clearPinInput() {
+    enteredPin = '';
+    updatePinDots();
+  }
+
+  function updatePinDots() {
+    for (let i = 1; i <= 4; i++) {
+      const dot = document.getElementById('dot' + i);
+      dot.className = 'pin-dot';
+      if (i <= enteredPin.length) {
+        dot.classList.add('filled');
+      }
+    }
+  }
+
+  function verifyPin() {
+    const correctPin = settings.pinCode || '1234';
+
+    // Seul le code PIN configuré par la boutique est accepté (aucun passe-droit)
+    if (enteredPin === correctPin) {
+      if (navigator.vibrate) navigator.vibrate(50);
+      document.getElementById('pinLockOverlay').classList.add('hidden');
+      isAppLocked = false;
+      enteredPin = '';
+      updatePinDots();
+    } else {
+      // Erreur de PIN
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById('dot' + i).classList.add('error');
+      }
+      document.getElementById('pinPromptMsg').textContent = "❌ Code PIN incorrect. Réessayez";
+      setTimeout(() => {
+        enteredPin = '';
+        updatePinDots();
+        document.getElementById('pinPromptMsg').textContent = "Entrez votre code PIN de caisse";
+      }, 700);
+    }
+  }
+
+  function openForgotPinModal() {
+    const shopId = license ? license.shopId : 'CB-0000';
+    document.getElementById('forgotShopIdDisplay').textContent = shopId;
+    document.getElementById('resetPinCodeInput').value = '';
+    openModal('modalForgotPin');
+  }
+
+  function askAgentForResetPin() {
+    const shopId = license ? license.shopId : 'CB-0000';
+    const shopName = settings.shopName || 'Ma boutique';
+    const msg = `Bonjour agent support, j'ai oublié le code PIN de ma caisse *${shopName}* (Identifiant: *${shopId}*). Pouvez-vous me donner mon code de réinitialisation de secours ? Merci.`;
+    window.open(`https://wa.me/${AGENT_WHATSAPP_SUPPORT}?text=${encodeURIComponent(msg)}`, '_blank');
+  }
+
+  // Code de secours unique calculé à partir de l'identifiant propre de la boutique
+  function generateResetPinForShop(shopId) {
+    const numPart = parseInt(shopId.replace(/[^0-9]/g, '')) || 1234;
+    // Formule mathématique unique et distincte de l'abonnement
+    const code = ((numPart * 73 + 81927) % 900000) + 100000;
+    return code.toString();
+  }
+
+  function applyMasterResetPin() {
+    const code = document.getElementById('resetPinCodeInput').value.trim();
+    if (!code) {
+      showToast("Veuillez entrer le code de secours.");
+      return;
+    }
+
+    const currentShopId = license ? license.shopId : 'CB-0000';
+    const expectedResetCode = generateResetPinForShop(currentShopId);
+
+    // Seul le code de secours calculé spécifiquement pour CETTE boutique est valide
+    if (code === expectedResetCode) {
+      settings.pinCode = '1234';
+      saveData();
+      closeModal('modalForgotPin');
+      document.getElementById('currentPinPreview').textContent = '1234';
+      alert("✅ Code PIN réinitialisé avec succès à : 1234. Tapez 1234 pour déverrouiller et pensez à le modifier dans Paramètres.");
+      clearPinInput();
+    } else {
+      alert("❌ Code de secours invalide pour cette boutique. Veuillez contacter votre agent support.");
+    }
+  }
+
+  function changePinPrompt() {
+    const oldPin = prompt("Entrez votre code PIN actuel :", "");
+    if (oldPin !== settings.pinCode) {
+      alert("Code PIN actuel incorrect.");
+      return;
+    }
+
+    const newPin = prompt("Entrez votre NOUVEAU code PIN (4 chiffres) :", "");
+    if (!newPin || newPin.length !== 4 || isNaN(newPin)) {
+      alert("Le code PIN doit comporter exactement 4 chiffres.");
+      return;
+    }
+
+    const confirmPin = prompt("Confirmez votre nouveau code PIN :", "");
+    if (confirmPin !== newPin) {
+      alert("Les codes ne correspondent pas.");
+      return;
+    }
+
+    settings.pinCode = newPin;
+    saveData();
+    document.getElementById('currentPinPreview').textContent = newPin;
+    showToast("Code PIN modifié avec succès !");
+  }
+
+  // =========================================================
+  // GESTION DU MODÈLE D'ESSAI & DE LA LICENCE
+  // =========================================================
+  function initLicense() {
+    const savedLic = localStorage.getItem('caisse_license');
+    const now = Date.now();
+    const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
+
+    if (savedLic) {
+      license = JSON.parse(savedLic);
+    } else {
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
+      license = {
+        shopId: 'CB-' + randomNum,
+        installedAt: now,
+        expiresAt: now + FOURTEEN_DAYS_MS,
+        status: 'trial',
+        monthsPaid: 0
+      };
+      saveData();
+    }
+
+    updateLicenseUI();
+  }
+
+  function getDaysRemaining() {
+    if (!license) return 0;
+    const diff = license.expiresAt - Date.now();
+    return Math.ceil(diff / (24 * 60 * 60 * 1000));
+  }
+
+  function isLicenseExpired() {
+    return getDaysRemaining() <= 0;
+  }
+
+  function updateLicenseUI() {
+    if (!license) return;
+    const daysLeft = getDaysRemaining();
+    const badge = document.getElementById('trialBadgeEl');
+
+    document.getElementById('licenseShopId').textContent = license.shopId;
+
+    if (daysLeft > 0) {
+      if (license.status === 'active') {
+        badge.className = 'trial-badge';
+        badge.style.background = '#E2EFE7';
+        badge.style.color = '#1B6344';
+        badge.innerHTML = `⭐ Pro : ${daysLeft}j`;
+        document.getElementById('licenseStatusText').textContent = "Abonnement Pro Actif";
+        document.getElementById('licenseSubDetail').textContent = `Valide encore ${daysLeft} jour(s).`;
+        document.getElementById('licenseHeroCard').className = 'license-card-hero';
+      } else {
+        badge.className = 'trial-badge';
+        badge.innerHTML = `⏳ Essai : ${daysLeft}j`;
+        document.getElementById('licenseStatusText').textContent = "Période d'essai gratuit";
+        document.getElementById('licenseSubDetail').textContent = `Il vous reste ${daysLeft} jour(s) d'essai gratuit.`;
+        document.getElementById('licenseHeroCard').className = 'license-card-hero';
+      }
+    } else {
+      badge.className = 'trial-badge expired';
+      badge.innerHTML = `⚠️ Expiré (0j)`;
+      document.getElementById('licenseStatusText').textContent = "Période d'essai terminée";
+      document.getElementById('licenseSubDetail').textContent = "Veuillez renouveler pour continuer à encaisser.";
+      document.getElementById('licenseHeroCard').className = 'license-card-hero expired';
+    }
+  }
+
+  function checkExpirationLock() {
+    if (isLicenseExpired()) {
+      openLicenseModal(true);
+    }
+  }
+
+  function openLicenseModal(isLocked = false) {
+    updateLicenseUI();
+    const closeBtn = document.getElementById('closeLicenseBtn');
+    
+    if (isLocked || isLicenseExpired()) {
+      closeBtn.style.display = 'none';
+      document.getElementById('licenseModalTitle').textContent = "🔒 Renouvellement Requis";
+    } else {
+      closeBtn.style.display = 'flex';
+      document.getElementById('licenseModalTitle').textContent = "Abonnement & Licence";
+    }
+    openModal('modalLicense');
+  }
+
+  function generateActivationCodeForShop(shopId) {
+    const numPart = parseInt(shopId.replace(/[^0-9]/g, '')) || 1234;
+    const code = ((numPart * 31 + 54321) % 900000) + 100000;
+    return code.toString();
+  }
+
+  function applyActivationCode() {
+    const input = document.getElementById('activationCodeInput').value.trim();
+    if (!input) {
+      showToast("Veuillez saisir un code.");
+      return;
+    }
+
+    const expectedCode = generateActivationCodeForShop(license ? license.shopId : 'CB-0000');
+
+    // Seul le code calculé pour cette boutique spécifique est accepté
+    if (input === expectedCode) {
+      const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+      const baseDate = isLicenseExpired() ? Date.now() : license.expiresAt;
+      license.expiresAt = baseDate + THIRTY_DAYS_MS;
+      license.status = 'active';
+      license.monthsPaid = (license.monthsPaid || 0) + 1;
+
+      saveData();
+      updateLicenseUI();
+      closeModal('modalLicense');
+      document.getElementById('activationCodeInput').value = '';
+      alert(`🎉 Félicitations ! Votre abonnement est activé pour 30 jours (reste ${getDaysRemaining()} jours).`);
+    } else {
+      alert("❌ Code d'activation invalide pour cette boutique. Veuillez vérifier auprès de votre agent.");
+    }
+  }
+
+  function contactAgentForRenewal() {
+    const shopName = settings.shopName || 'Ma boutique';
+    const shopId = license ? license.shopId : 'CB-0000';
+    const msg = `Bonjour agent support, je souhaite renouveler ma formule Caisse Boutique pour *${shopName}* (Identifiant: *${shopId}*). Merci de m'indiquer la marche à suivre pour le règlement et la remise du code d'activation.`;
+    window.open(`https://wa.me/${AGENT_WHATSAPP_SUPPORT}?text=${encodeURIComponent(msg)}`, '_blank');
+  }
+
+  function contactSupportMultiBoutiques() {
+    const shopName = settings.shopName || 'Mon enseigne';
+    const shopId = license ? license.shopId : 'CB-0000';
+    const msg = `Bonjour agent support Caisse Boutique, je possède plusieurs boutiques / points de vente pour mon enseigne *${shopName}* (Réf: *${shopId}*) et je souhaite obtenir des informations sur l'offre *Multi-Boutiques (Gestion Centralisée à distance)*. Pouvons-nous échanger ?`;
+    window.open(`https://wa.me/${AGENT_WHATSAPP_SUPPORT}?text=${encodeURIComponent(msg)}`, '_blank');
+  }
+
+  function adminCalculateCode() {
+    const inputId = document.getElementById('adminCalcShopId').value.trim();
+    if (!inputId) return;
+    const actCode = generateActivationCodeForShop(inputId);
+    const resetCode = generateResetPinForShop(inputId);
+    document.getElementById('adminCalcResult').innerHTML = `
+      Boutique : <strong>${inputId}</strong><br>
+      • Code Abonnement (+30j) : <span style="color:#1B6344; font-size:13px;">${actCode}</span><br>
+      • Code Secours Reset PIN : <span style="color:#B83E28; font-size:13px;">${resetCode}</span>
+    `;
+  }
+
+  // --- Navigation d'onglets ---
+  function switchView(viewId, tabElement) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+
+    document.getElementById(viewId).classList.add('active');
+    if (tabElement) tabElement.classList.add('active');
+
+    if (viewId === 'viewStock') renderStockView();
+    if (viewId === 'viewBilan') renderDashboard();
+  }
+
+  // --- Vue 1 : Grille des produits & Recherche ---
+  function renderProductsGrid(filterText = '') {
+    const grid = document.getElementById('productsGrid');
+    grid.innerHTML = '';
+
+    const query = filterText.toLowerCase().trim();
+    const filtered = products.filter(p => p.name.toLowerCase().includes(query));
+
+    if (filtered.length === 0) {
+      grid.innerHTML = products.length === 0
+        ? `<div style="grid-column: span 2; text-align:center; padding:32px 16px; color:var(--muted); font-size:13px; background:var(--surface); border:1px dashed var(--line); border-radius:var(--radius-md);">
+             📦 Votre catalogue est vide.<br><br>
+             <button class="pill-btn" style="background:var(--accent); color:white; border:none; padding:8px 16px; font-weight:700;" onclick="openTemplatesModal()">🏪 Charger un modèle de boutique</button>
+           </div>`
+        : `<div style="grid-column: span 2; text-align:center; padding:24px; color:var(--muted); font-size:13px;">Aucun produit trouvé pour "${filterText}".</div>`;
+      return;
+    }
+
+    filtered.forEach(p => {
+      const card = document.createElement('div');
+      card.className = `product-card ${p.stock <= 0 ? 'out-of-stock' : ''}`;
+      
+      const isLow = p.stock <= p.alertThreshold;
+      const stockBadge = p.stock <= 0 
+        ? `<span class="p-stock-badge low">Rupture</span>`
+        : `<span class="p-stock-badge ${isLow ? 'low' : ''}">${p.stock} restant${p.stock > 1 ? 's' : ''}</span>`;
+
+      card.innerHTML = `
+        <div class="p-title">${p.name}</div>
+        <div class="p-meta">
+          <span class="p-price num">${formatFCFA(p.price)}</span>
+          ${stockBadge}
+        </div>
+      `;
+
+      card.onclick = () => addToCart(p);
+      grid.appendChild(card);
+    });
+  }
+
+  function filterProducts() {
+    const text = document.getElementById('searchProductInput').value;
+    renderProductsGrid(text);
+  }
+
+  // --- Gestion du Panier (Caisse) ---
+  function addToCart(product) {
+    if (isLicenseExpired()) {
+      openLicenseModal(true);
+      return;
+    }
+
+    if (product.stock <= 0) {
+      showToast("Article en rupture de stock !");
+      return;
+    }
+
+    const existing = cart.find(item => item.productId === product.id);
+    if (existing) {
+      if (existing.qty + 1 > product.stock) {
+        showToast(`Stock maximum atteint (${product.stock}) !`);
+        return;
+      }
+      existing.qty += 1;
+    } else {
+      cart.push({
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        qty: 1
+      });
+    }
+
+    if (navigator.vibrate) navigator.vibrate(30);
+    renderCart();
+  }
+
+  function updateCartQty(index, delta) {
+    const item = cart[index];
+    const product = products.find(p => p.id === item.productId);
+
+    item.qty += delta;
+    if (product && item.qty > product.stock) {
+      item.qty = product.stock;
+      showToast(`Stock maximum : ${product.stock}`);
+    }
+
+    if (item.qty <= 0) {
+      cart.splice(index, 1);
+    }
+
+    renderCart();
+  }
+
+  function clearCart() {
+    cart = [];
+    renderCart();
+  }
+
+  function getCartTotal() {
+    return cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  }
+
+  function renderCart() {
+    const list = document.getElementById('cartItemsList');
+    const badge = document.getElementById('cartCountBadge');
+    const totalVal = document.getElementById('cartTotalVal');
+    const checkoutBtn = document.getElementById('btnCheckout');
+
+    const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+    badge.textContent = `(${totalQty})`;
+
+    const total = getCartTotal();
+    totalVal.textContent = formatFCFA(total);
+
+    if (cart.length === 0) {
+      list.innerHTML = `<div class="cart-empty-msg">Tapez sur un produit ci-dessus pour l'ajouter au panier.</div>`;
+      checkoutBtn.disabled = true;
+      return;
+    }
+
+    checkoutBtn.disabled = false;
+    list.innerHTML = '';
+
+    cart.forEach((item, index) => {
+      const row = document.createElement('div');
+      row.className = 'cart-row';
+      row.innerHTML = `
+        <div class="item-info">
+          <span class="item-name">${item.name}</span>
+          <span class="item-unit-price">${formatFCFA(item.price)} × ${item.qty}</span>
+        </div>
+        <div class="qty-controls">
+          <button class="qty-btn" onclick="updateCartQty(${index}, -1)">−</button>
+          <span class="num" style="font-weight:700; min-width:18px; text-align:center;">${item.qty}</span>
+          <button class="qty-btn" onclick="updateCartQty(${index}, 1)">+</button>
+        </div>
+        <div class="item-total num">${formatFCFA(item.price * item.qty)}</div>
+      `;
+      list.appendChild(row);
+    });
+  }
+
+  function openCheckoutModal() {
+    if (isLicenseExpired()) {
+      openLicenseModal(true);
+      return;
+    }
+
+    if (cart.length === 0) return;
+
+    const total = getCartTotal();
+    document.getElementById('modalTotalToPay').textContent = formatFCFA(total);
+    document.getElementById('cashReceivedInput').value = '';
+    document.getElementById('changeAmountVal').textContent = '0 FCFA';
+    selectPaymentMode('especes');
+
+    openModal('modalCheckout');
+  }
+
+  function selectPaymentMode(mode) {
+    currentPaymentMode = mode;
+    const cashCard = document.getElementById('modeCashCard');
+    const momoCard = document.getElementById('modeMomoCard');
+    const cashSection = document.getElementById('sectionCash');
+    const momoSection = document.getElementById('sectionMomo');
+
+    if (mode === 'especes') {
+      cashCard.classList.add('selected');
+      momoCard.classList.remove('selected');
+      cashSection.style.display = 'block';
+      momoSection.style.display = 'none';
+    } else {
+      momoCard.classList.add('selected');
+      cashCard.classList.remove('selected');
+      cashSection.style.display = 'none';
+      momoSection.style.display = 'block';
+    }
+  }
+
+  function setExactCash() {
+    const total = getCartTotal();
+    document.getElementById('cashReceivedInput').value = total;
+    calculateChange();
+  }
+
+  function addQuickCash(amount) {
+    const input = document.getElementById('cashReceivedInput');
+    const current = parseInt(input.value) || 0;
+    input.value = current + amount;
+    calculateChange();
+  }
+
+  function calculateChange() {
+    const total = getCartTotal();
+    const received = parseInt(document.getElementById('cashReceivedInput').value) || 0;
+    const change = received - total;
+
+    const changeEl = document.getElementById('changeAmountVal');
+    if (change >= 0) {
+      changeEl.textContent = formatFCFA(change);
+      changeEl.style.color = '#165636';
+    } else {
+      changeEl.textContent = 'Manque ' + formatFCFA(Math.abs(change));
+      changeEl.style.color = 'var(--danger)';
+    }
+  }
+
+  function confirmSale() {
+    const total = getCartTotal();
+    if (total <= 0) return;
+
+    let received = total;
+    let change = 0;
+    let clientRef = '';
+
+    if (currentPaymentMode === 'especes') {
+      received = parseInt(document.getElementById('cashReceivedInput').value) || total;
+      if (received < total) {
+        showToast("Le montant reçu est inférieur au total !");
+        return;
+      }
+      change = received - total;
+    } else {
+      const op = document.getElementById('momoOperatorSelect').value;
+      const ref = document.getElementById('momoRefInput').value.trim();
+      clientRef = `${op} ${ref ? '(' + ref + ')' : ''}`;
+    }
+
+    cart.forEach(item => {
+      const prod = products.find(p => p.id === item.productId);
+      if (prod) {
+        prod.stock = Math.max(0, prod.stock - item.qty);
+      }
+    });
+
+    const newSale = {
+      id: 'VTE-' + Date.now().toString().slice(-6),
+      date: new Date().toISOString(),
+      items: [...cart],
+      total: total,
+      paymentMode: currentPaymentMode,
+      received: received,
+      change: change,
+      clientRef: clientRef
+    };
+
+    sales.unshift(newSale);
+    lastSaleRecorded = newSale;
+
+    saveData();
+
+    cart = [];
+    renderCart();
+    renderProductsGrid();
+    closeModal('modalCheckout');
+
+    renderReceipt(newSale);
+    openModal('modalReceipt');
+    showToast("Vente enregistrée avec succès !");
+  }
+
+  function renderReceipt(sale) {
+    const paper = document.getElementById('receiptPaper');
+    const dateObj = new Date(sale.date);
+    const dateStr = dateObj.toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+    let itemsHtml = '';
+    sale.items.forEach(i => {
+      itemsHtml += `
+        <div style="display:flex; justify-content:space-between;">
+          <span>${i.qty}x ${i.name}</span>
+          <span>${formatFCFA(i.price * i.qty)}</span>
+        </div>
+      `;
+    });
+
+    const niuHtml = settings.shopNiu ? `<div style="font-size:11px; color:#444; font-family:'IBM Plex Mono',monospace; margin-top:2px;">NIU : <strong>${settings.shopNiu}</strong></div>` : '';
+
+    paper.innerHTML = `
+      <div class="header">
+        <div style="font-size:16px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">${settings.shopName}</div>
+        <div style="font-size:11.5px; color:#555;">${settings.shopLocation}${settings.shopPhone ? ' · Tél: ' + settings.shopPhone : ''}</div>
+        ${niuHtml}
+        <div style="margin-top:6px; font-size:12px; font-weight:700; border-top:1px dashed #ccc; border-bottom:1px dashed #ccc; padding:3px 0;">
+          FACTURE N° ${sale.id}
+        </div>
+        <div style="font-size:10.5px; color:#666; margin-top:3px;">Date: ${dateStr}</div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:5px; padding:6px 0; border-bottom:1px dashed #ccc;">
+        <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700; color:#555; border-bottom:1px solid #eee; padding-bottom:3px;">
+          <span>ARTICLE</span>
+          <span>TOTAL</span>
+        </div>
+        ${itemsHtml}
+      </div>
+
+      <div class="total-row" style="font-size:16px; font-weight:800; padding:6px 0;">
+        <span>NET À PAYER</span>
+        <span class="num">${formatFCFA(sale.total)}</span>
+      </div>
+
+      <div style="font-size:11px; color:#444; background:#f9f9f9; padding:6px; border-radius:4px; margin-top:2px;">
+        Règlement : <strong>${sale.paymentMode === 'momo' ? 'Mobile Money' : 'Espèces'}</strong>
+        ${sale.clientRef ? ' · ' + sale.clientRef : ''}<br>
+        ${sale.paymentMode === 'especes' ? `Reçu : ${formatFCFA(sale.received)} | Monnaie : ${formatFCFA(sale.change)}` : ''}
+      </div>
+
+      <div class="footer" style="text-align:center; font-size:10px; color:#777; margin-top:8px;">
+        Merci pour votre confiance ! À bientôt.<br>
+        <em>Logiciel Caisse Boutique — Cameroun</em>
+      </div>
+    `;
+  }
+
+  function printOrDownloadReceiptPDF() {
+    window.print();
+  }
+
+  function shareReceiptWhatsApp() {
+    if (!lastSaleRecorded) return;
+    const s = lastSaleRecorded;
+    const dateStr = new Date(s.date).toLocaleDateString('fr-FR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+
+    let text = `🧾 *REÇU — ${settings.shopName}*\n`;
+    if (settings.shopNiu) text += `📋 NIU: *${settings.shopNiu}*\n`;
+    text += `📅 ${dateStr} | Réf: ${s.id}\n`;
+    text += `--------------------------\n`;
+    s.items.forEach(i => {
+      text += `▪ ${i.qty}x ${i.name} : ${formatFCFA(i.price * i.qty)}\n`;
+    });
+    text += `--------------------------\n`;
+    text += `*TOTAL : ${formatFCFA(s.total)}*\n`;
+    text += `Paiement : ${s.paymentMode === 'momo' ? '📱 Mobile Money' : '💵 Espèces'}\n`;
+    text += `\nMerci pour votre achat ! 🙏`;
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  }
+
+  function renderStockView() {
+    const list = document.getElementById('stockItemsList');
+    list.innerHTML = '';
+
+    let alertCount = 0;
+    let totalStockValue = 0;
+
+    document.getElementById('stockTotalArticles').textContent = products.length;
+
+    if (products.length === 0) {
+      list.innerHTML = `
+        <div style="text-align:center; padding:32px 16px; color:var(--muted); font-size:13px; background:var(--surface); border:1px dashed var(--line); border-radius:var(--radius-md);">
+          📦 Votre stock est actuellement vide.<br><br>
+          <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+            <button class="pill-btn" onclick="openAddProductModal()">➕ Créer un article</button>
+            <button class="pill-btn" style="background:var(--accent); color:white; border:none; padding:8px 14px;" onclick="openTemplatesModal()">🏪 Charger un modèle</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('stockCritiqueCount').textContent = 0;
+      document.getElementById('stockValeurTotale').textContent = '0';
+      return;
+    }
+
+    products.forEach(p => {
+      totalStockValue += (p.price * p.stock);
+      const isLow = p.stock <= p.alertThreshold;
+      if (isLow) alertCount++;
+
+      const maxBar = Math.max(p.stock, p.alertThreshold * 2, 20);
+      const pct = Math.min(100, Math.round((p.stock / maxBar) * 100));
+
+      const row = document.createElement('div');
+      row.className = `stock-item-row ${isLow ? 'low-warning' : ''}`;
+      row.innerHTML = `
+        <div class="stock-item-top">
+          <div>
+            <div class="stock-item-title">${p.name}</div>
+            <div class="stock-item-price num">${formatFCFA(p.price)}</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="stock-item-qty num">${p.stock} restant${p.stock > 1 ? 's' : ''}</div>
+          </div>
+        </div>
+
+        <div class="stock-progress-track">
+          <div class="stock-progress-bar" style="width:${pct}%;"></div>
+        </div>
+
+        <div class="stock-item-controls">
+          <span class="stock-badge-tag ${isLow ? 'alert' : ''}">
+            ${p.stock === 0 ? 'RUPTURE' : (isLow ? 'Stock bas (Seuil ' + p.alertThreshold + ')' : 'Stock OK')}
+          </span>
+          <div class="quick-restock-btns">
+            <button class="btn-quick-add" onclick="quickRestock('${p.id}', 5)">+5</button>
+            <button class="btn-quick-add" onclick="quickRestock('${p.id}', 10)">+10</button>
+            <button class="btn-quick-add" onclick="editProductPrice('${p.id}')">✏️ Prix</button>
+            <button class="btn-quick-add danger" onclick="deleteProduct('${p.id}')" title="Supprimer cet article">🗑️</button>
+          </div>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+
+    document.getElementById('stockCritiqueCount').textContent = alertCount;
+    document.getElementById('stockValeurTotale').textContent = (totalStockValue || 0).toLocaleString('fr-FR');
+  }
+
+  function quickRestock(prodId, qty) {
+    if (isLicenseExpired()) {
+      openLicenseModal(true);
+      return;
+    }
+    const p = products.find(item => item.id === prodId);
+    if (p) {
+      p.stock += qty;
+      saveData();
+      renderStockView();
+      renderProductsGrid();
+      showToast(`+${qty} ajoutés à ${p.name}`);
+    }
+  }
+
+  function editProductPrice(prodId) {
+    const p = products.find(item => item.id === prodId);
+    if (!p) return;
+    const newPrice = prompt(`Nouveau prix pour "${p.name}" (actuel: ${p.price} FCFA) :`, p.price);
+    if (newPrice !== null && !isNaN(newPrice) && parseInt(newPrice) > 0) {
+      p.price = parseInt(newPrice);
+      saveData();
+      renderStockView();
+      renderProductsGrid();
+      showToast("Prix mis à jour !");
+    }
+  }
+
+  function openAddProductModal() {
+    if (isLicenseExpired()) {
+      openLicenseModal(true);
+      return;
+    }
+    document.getElementById('newProdName').value = '';
+    document.getElementById('newProdPrice').value = '';
+    document.getElementById('newProdStock').value = '10';
+    document.getElementById('newProdAlert').value = '5';
+    openModal('modalAddProduct');
+  }
+
+  function saveNewProduct() {
+    const name = document.getElementById('newProdName').value.trim();
+    const price = parseInt(document.getElementById('newProdPrice').value);
+    const stock = parseInt(document.getElementById('newProdStock').value) || 0;
+    const alert = parseInt(document.getElementById('newProdAlert').value) || 5;
+
+    if (!name || isNaN(price) || price <= 0) {
+      showToast("Veuillez renseigner un nom et un prix valides !");
+      return;
+    }
+
+    const newProd = {
+      id: 'p_' + Date.now(),
+      name: name,
+      price: price,
+      stock: stock,
+      alertThreshold: alert
+    };
+
+    products.push(newProd);
+    saveData();
+    renderProductsGrid();
+    renderStockView();
+    closeModal('modalAddProduct');
+    showToast(`Produit "${name}" ajouté !`);
+  }
+
+  function openTemplatesModal() {
+    if (isLicenseExpired()) {
+      openLicenseModal(true);
+      return;
+    }
+    openModal('modalTemplates');
+  }
+
+  function generateDemoSalesForProducts(prods) {
+    if (!prods || prods.length === 0) return [];
+    const generatedSales = [];
+    const now = Date.now();
+    const DAY_MS = 24 * 60 * 60 * 1000;
+
+    // Définir des volumes de ventes réalistes selon l'horizon temporel
+    // Ventes d'aujourd'hui (5 ventes réparties dans la journée)
+    const todayOffsets = [0.5, 1.5, 3.2, 5.0, 7.5].map(h => h * 60 * 60 * 1000);
+    // Ventes des 7 derniers jours (hier à j-6)
+    const weekOffsets = [1, 1.5, 2, 2.8, 3.5, 4, 4.6, 5.2, 6].map(d => d * DAY_MS);
+    // Ventes du mois (j-7 à j-28)
+    const monthOffsets = [8, 10, 12, 14, 17, 19, 21, 24, 26, 28].map(d => d * DAY_MS);
+
+    const allOffsets = [...todayOffsets, ...weekOffsets, ...monthOffsets];
+
+    allOffsets.forEach((offset, idx) => {
+      // Sélectionner 1 à 2 articles aléatoires parmi les produits disponibles
+      const p1 = prods[idx % prods.length];
+      const p2 = prods[(idx + 3) % prods.length];
+      const qty1 = (idx % 3 === 0) ? 2 : 1;
+      const items = [{ productId: p1.id, name: p1.name, price: p1.price, qty: qty1 }];
+
+      if (p2 && p2 !== p1 && idx % 2 === 0) {
+        items.push({ productId: p2.id, name: p2.name, price: p2.price, qty: 1 });
+      }
+
+      const total = items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      const isMomo = idx % 3 === 1;
+      const saleDate = new Date(now - offset).toISOString();
+
+      generatedSales.push({
+        id: 'VTE-' + (100000 + idx),
+        date: saleDate,
+        items: items,
+        total: total,
+        paymentMode: isMomo ? 'momo' : 'especes',
+        received: total,
+        change: 0,
+        clientRef: isMomo ? 'OM Ref#DEMO' : ''
+      });
+    });
+
+    return generatedSales;
+  }
+
+  function applyActivityTemplate(key) {
+    const tpl = ACTIVITY_TEMPLATES[key];
+    if (!tpl) return;
+    const msg = key === 'vide'
+      ? "Voulez-vous vraiment effacer tous les articles pour démarrer avec un catalogue vierge ?"
+      : `Voulez-vous charger le modèle "${tpl.name}" (${tpl.products.length} articles) ? Le stock et le bilan s'adapteront immédiatement à cette activité.`;
+
+    if (confirm(msg)) {
+      products = tpl.products.map(p => ({
+        id: 'p_' + Math.random().toString(36).substr(2, 9),
+        name: p.name,
+        price: p.price,
+        stock: p.stock,
+        alertThreshold: p.alertThreshold
+      }));
+      cart = [];
+      // Synchroniser le bilan et les statistiques avec les articles de ce modèle
+      sales = key === 'vide' ? [] : generateDemoSalesForProducts(products);
+      saveData();
+      renderProductsGrid();
+      renderStockView();
+      renderCart();
+      renderDashboard();
+      closeModal('modalTemplates');
+      showToast(`Modèle "${tpl.name}" & Bilan appliqués !`);
+    }
+  }
+
+  function deleteProduct(prodId) {
+    if (isLicenseExpired()) {
+      openLicenseModal(true);
+      return;
+    }
+    const p = products.find(item => item.id === prodId);
+    if (!p) return;
+    if (confirm(`Supprimer définitivement l'article "${p.name}" du catalogue ?`)) {
+      products = products.filter(item => item.id !== prodId);
+      cart = cart.filter(item => item.productId !== prodId);
+      saveData();
+      renderProductsGrid();
+      renderStockView();
+      renderCart();
+      showToast(`Article "${p.name}" supprimé !`);
+    }
+  }
+
+  function confirmClearAllProducts() {
+    if (isLicenseExpired()) {
+      openLicenseModal(true);
+      return;
+    }
+    if (confirm("⚠️ Attention : Voulez-vous effacer TOUS les articles du stock ? Vos ventes passées resteront enregistrées.")) {
+      products = [];
+      cart = [];
+      saveData();
+      renderProductsGrid();
+      renderStockView();
+      renderCart();
+      showToast("Catalogue vidé. Utilisez ➕ pour ajouter vos articles.");
+    }
+  }
+
+  function setBilanPeriod(period, btnEl) {
+    currentBilanPeriod = period;
+    document.querySelectorAll('.period-pill').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+    renderDashboard();
+  }
+
+  function getSalesForPeriod(period) {
+    const now = new Date();
+    let startCurrent = 0;
+    let startPrevious = null;
+    let endPrevious = null;
+    let heroTitle = "Ventes d'aujourd'hui";
+    let periodLabel = "Aujourd'hui";
+    let versusLabel = "vs hier";
+
+    if (period === 'today') {
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      startCurrent = today.getTime();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      startPrevious = yesterday.getTime();
+      endPrevious = startCurrent;
+      heroTitle = "Ventes d'aujourd'hui";
+      periodLabel = "Aujourd'hui";
+      versusLabel = "vs hier";
+    } else if (period === 'week') {
+      startCurrent = now.getTime() - (7 * 24 * 60 * 60 * 1000);
+      startPrevious = now.getTime() - (14 * 24 * 60 * 60 * 1000);
+      endPrevious = startCurrent;
+      heroTitle = "Ventes des 7 derniers jours";
+      periodLabel = "7 derniers jours";
+      versusLabel = "vs sem. dernière";
+    } else if (period === 'month') {
+      startCurrent = now.getTime() - (30 * 24 * 60 * 60 * 1000);
+      startPrevious = now.getTime() - (60 * 24 * 60 * 60 * 1000);
+      endPrevious = startCurrent;
+      heroTitle = "Ventes des 30 derniers jours";
+      periodLabel = "30 derniers jours";
+      versusLabel = "vs mois dernier";
+    } else {
+      startCurrent = 0;
+      startPrevious = null;
+      endPrevious = null;
+      heroTitle = "Total des Ventes (Historique)";
+      periodLabel = "Tout l'historique";
+      versusLabel = "";
+    }
+
+    const currentSales = sales.filter(s => {
+      const t = new Date(s.date).getTime();
+      return t >= startCurrent;
+    });
+
+    const previousSales = (startPrevious !== null && endPrevious !== null)
+      ? sales.filter(s => {
+          const t = new Date(s.date).getTime();
+          return t >= startPrevious && t < endPrevious;
+        })
+      : [];
+
+    return { currentSales, previousSales, heroTitle, periodLabel, versusLabel, startPrevious };
+  }
+
+  function renderDashboard() {
+    const { currentSales, previousSales, heroTitle, periodLabel, versusLabel, startPrevious } = getSalesForPeriod(currentBilanPeriod);
+
+    const totalCA = currentSales.reduce((sum, s) => sum + s.total, 0);
+    const nbVentes = currentSales.length;
+    const panierMoyen = nbVentes > 0 ? Math.round(totalCA / nbVentes) : 0;
+
+    let totalCash = 0;
+    let totalMomo = 0;
+    currentSales.forEach(s => {
+      if (s.paymentMode === 'momo') totalMomo += s.total;
+      else totalCash += s.total;
+    });
+
+    document.getElementById('bilanHeroLabel').textContent = heroTitle;
+    document.getElementById('bilanCaJour').textContent = formatFCFA(totalCA);
+    document.getElementById('bilanNbVentes').textContent = `${nbVentes} vente(s)`;
+    document.getElementById('bilanPanierMoyen').textContent = `Panier moy. : ${formatFCFA(panierMoyen)}`;
+    document.getElementById('bilanEspecesTotal').textContent = formatFCFA(totalCash);
+    document.getElementById('bilanMomoTotal').textContent = formatFCFA(totalMomo);
+
+    // Comparatif Versus
+    const versusBadge = document.getElementById('bilanVersusBadge');
+    if (startPrevious !== null && (totalCA > 0 || previousSales.length > 0)) {
+      const prevCA = previousSales.reduce((sum, s) => sum + s.total, 0);
+      versusBadge.style.display = 'inline-flex';
+      if (prevCA === 0 && totalCA > 0) {
+        versusBadge.className = 'versus-badge positive';
+        versusBadge.innerHTML = `<span>▲ Nouveau ${versusLabel}</span>`;
+      } else if (prevCA > 0) {
+        const diff = totalCA - prevCA;
+        const pct = Math.round((diff / prevCA) * 100);
+        if (pct > 0) {
+          versusBadge.className = 'versus-badge positive';
+          versusBadge.innerHTML = `<span>▲ +${pct}% ${versusLabel} (${formatFCFA(prevCA)})</span>`;
+        } else if (pct < 0) {
+          versusBadge.className = 'versus-badge negative';
+          versusBadge.innerHTML = `<span>▼ ${pct}% ${versusLabel} (${formatFCFA(prevCA)})</span>`;
+        } else {
+          versusBadge.className = 'versus-badge neutral';
+          versusBadge.innerHTML = `<span>= Même niveau ${versusLabel}</span>`;
+        }
+      } else {
+        versusBadge.style.display = 'none';
+      }
+    } else {
+      versusBadge.style.display = 'none';
+    }
+
+    // Top 5 Produits Vendus
+    const productStats = {};
+    currentSales.forEach(s => {
+      if (Array.isArray(s.items)) {
+        s.items.forEach(it => {
+          if (!productStats[it.name]) productStats[it.name] = { name: it.name, qty: 0, total: 0 };
+          productStats[it.name].qty += it.qty;
+          productStats[it.name].total += (it.price * it.qty);
+        });
+      }
+    });
+
+    const topProducts = Object.values(productStats).sort((a, b) => b.total - a.total).slice(0, 5);
+    const topListEl = document.getElementById('topProductsList');
+    document.getElementById('topProdsPeriodLabel').textContent = periodLabel;
+
+    if (topProducts.length === 0) {
+      topListEl.innerHTML = `<div class="cart-empty-msg">Aucun article vendu sur cette période.</div>`;
+    } else {
+      topListEl.innerHTML = '';
+      const maxTotal = topProducts[0].total || 1;
+      topProducts.forEach((tp, idx) => {
+        const rankClass = idx === 0 ? 'gold' : (idx === 1 ? 'silver' : (idx === 2 ? 'bronze' : ''));
+        const pct = Math.min(100, Math.round((tp.total / maxTotal) * 100));
+        const row = document.createElement('div');
+        row.className = 'top-prod-row';
+        row.innerHTML = `
+          <div class="top-prod-info">
+            <div class="top-prod-name">
+              <span class="top-prod-rank ${rankClass}">#${idx + 1}</span>
+              <span>${tp.name}</span>
+            </div>
+            <div class="top-prod-metrics">
+              <span class="top-prod-qty">${tp.qty} vendu${tp.qty > 1 ? 's' : ''}</span>
+              <span class="top-prod-revenue num">${formatFCFA(tp.total)}</span>
+            </div>
+          </div>
+          <div class="top-prod-bar-track">
+            <div class="top-prod-bar-fill" style="width:${pct}%;"></div>
+          </div>
+        `;
+        topListEl.appendChild(row);
+      });
+    }
+
+    // Alertes stock bas
+    const lowStockProds = products.filter(p => p.stock <= p.alertThreshold);
+    const alertBox = document.getElementById('bilanAlertBox');
+    const alertTxt = document.getElementById('bilanAlertTxt');
+
+    if (lowStockProds.length > 0) {
+      alertBox.style.display = 'flex';
+      const names = lowStockProds.slice(0, 3).map(p => p.name).join(', ');
+      alertTxt.innerHTML = `<strong>${lowStockProds.length} produit(s) en alerte stock</strong> : ${names}${lowStockProds.length > 3 ? '...' : ''} à réapprovisionner.`;
+    } else {
+      alertBox.style.display = 'none';
+    }
+
+    renderBackupReminder();
+    renderSalesLogList(currentSales, periodLabel);
+  }
+
+  function setSalesLogPaymentFilter(mode, btnEl) {
+    salesPaymentFilter = mode;
+    ['btnFilterSalesAll', 'btnFilterSalesCash', 'btnFilterSalesMomo'].forEach(id => {
+      const b = document.getElementById(id);
+      if (b) b.classList.remove('active');
+    });
+    if (btnEl) btnEl.classList.add('active');
+    const { currentSales, periodLabel } = getSalesForPeriod(currentBilanPeriod);
+    renderSalesLogList(currentSales, periodLabel);
+  }
+
+  function filterSalesLog() {
+    const input = document.getElementById('searchSalesLogInput');
+    salesSearchQuery = input ? input.value.trim().toLowerCase() : '';
+    const { currentSales, periodLabel } = getSalesForPeriod(currentBilanPeriod);
+    renderSalesLogList(currentSales, periodLabel);
+  }
+
+  function renderSalesLogList(currentSales, periodLabel) {
+    const logList = document.getElementById('salesLogList');
+    if (!logList) return;
+
+    // Appliquer le filtre de paiement et la recherche textuelle
+    let filtered = currentSales.filter(s => {
+      if (salesPaymentFilter !== 'all' && s.paymentMode !== salesPaymentFilter) {
+        return false;
+      }
+      if (salesSearchQuery) {
+        const idMatch = s.id.toLowerCase().includes(salesSearchQuery);
+        const amountMatch = s.total.toString().includes(salesSearchQuery);
+        const itemMatch = Array.isArray(s.items) && s.items.some(it => it.name.toLowerCase().includes(salesSearchQuery));
+        const refMatch = s.clientRef && s.clientRef.toLowerCase().includes(salesSearchQuery);
+        if (!idMatch && !amountMatch && !itemMatch && !refMatch) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    document.getElementById('salesLogTitle').textContent = `📜 Ventes (${periodLabel})`;
+    document.getElementById('salesLogCount').textContent = salesSearchQuery || salesPaymentFilter !== 'all'
+      ? `${filtered.length} trouvée(s) / ${currentSales.length}`
+      : `${currentSales.length} vente(s)`;
+
+    if (filtered.length === 0) {
+      logList.innerHTML = `<div class="cart-empty-msg">${currentSales.length === 0 ? 'Aucune vente enregistrée pour ' + periodLabel + '.' : 'Aucune facture ne correspond à votre recherche.'}</div>`;
+      return;
+    }
+
+    logList.innerHTML = '';
+    // Afficher jusqu'à 50 résultats pour la recherche
+    filtered.slice(0, 50).forEach(s => {
+      const timeStr = new Date(s.date).toLocaleDateString('fr-FR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+      const badgeClass = s.paymentMode === 'momo' ? 'badge-momo' : 'badge-cash';
+      const badgeText = s.paymentMode === 'momo' ? 'MOMO' : 'CASH';
+
+      // Résumé des articles achetés
+      const itemsSummary = Array.isArray(s.items)
+        ? s.items.map(it => `${it.qty}x ${it.name}`).join(', ')
+        : '';
+
+      const row = document.createElement('div');
+      row.className = 'sale-log-item';
+      row.innerHTML = `
+        <div style="flex:1; min-width:0; padding-right:8px;">
+          <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+            <span class="num" style="font-weight:700;">${s.id}</span>
+            <span class="time">(${timeStr})</span>
+            <span class="${badgeClass}">${badgeText}</span>
+          </div>
+          <div style="font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
+            ${itemsSummary}
+          </div>
+        </div>
+        <div style="text-align:right; white-space:nowrap;">
+          <div class="num" style="font-weight:700; color:var(--accent); font-size:13px;">
+            ${formatFCFA(s.total)}
+          </div>
+          <span style="font-size:10px; color:var(--muted);">Ouvrir ➔</span>
+        </div>
+      `;
+      row.onclick = () => {
+        lastSaleRecorded = s;
+        renderReceipt(s);
+        openModal('modalReceipt');
+      };
+      logList.appendChild(row);
+    });
+  }
+
+  function renderBackupReminder() {
+    const banner = document.getElementById('bilanBackupReminder');
+    const txt = document.getElementById('bilanBackupTxt');
+    if (!banner || !txt) return;
+
+    if (!sales || sales.length === 0) {
+      banner.style.display = 'none';
+      return;
+    }
+
+    const lastBackup = settings.lastBackupDate;
+    const now = Date.now();
+    const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+
+    if (!lastBackup) {
+      banner.style.display = 'block';
+      txt.textContent = `Vous avez ${sales.length} vente(s) enregistrée(s) sans sauvegarde. Téléchargez votre fichier pour protéger vos comptes en cas de perte, panne ou changement de téléphone.`;
+    } else if (now - lastBackup > TWO_DAYS_MS) {
+      const daysAgo = Math.floor((now - lastBackup) / (24 * 60 * 60 * 1000));
+      banner.style.display = 'block';
+      txt.textContent = `Dernière sauvegarde il y a ${daysAgo} jour(s). Pensez à télécharger votre sauvegarde à jour.`;
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+
+  function shareBilanWhatsApp() {
+    const { currentSales, periodLabel } = getSalesForPeriod(currentBilanPeriod);
+    const totalCA = currentSales.reduce((sum, s) => sum + s.total, 0);
+    let totalCash = 0;
+    let totalMomo = 0;
+    currentSales.forEach(s => {
+      if (s.paymentMode === 'momo') totalMomo += s.total;
+      else totalCash += s.total;
+    });
+
+    let msg = `📊 *RAPPORT DES VENTES — ${settings.shopName}*\n`;
+    msg += `📅 Période : *${periodLabel.toUpperCase()}*\n`;
+    msg += `📍 ${settings.shopLocation}\n`;
+    msg += `---------------------------------\n`;
+    msg += `💰 *Chiffre d'affaires : ${formatFCFA(totalCA)}*\n`;
+    msg += `🛒 Nombre de ventes : ${currentSales.length}\n`;
+    msg += `💵 Total Espèces : ${formatFCFA(totalCash)}\n`;
+    msg += `📱 Total Mobile Money : ${formatFCFA(totalMomo)}\n`;
+    msg += `---------------------------------\n`;
+
+    // Top 3 articles
+    const productStats = {};
+    currentSales.forEach(s => {
+      if (Array.isArray(s.items)) {
+        s.items.forEach(it => {
+          if (!productStats[it.name]) productStats[it.name] = { name: it.name, qty: 0, total: 0 };
+          productStats[it.name].qty += it.qty;
+          productStats[it.name].total += (it.price * it.qty);
+        });
+      }
+    });
+    const top3 = Object.values(productStats).sort((a,b) => b.total - a.total).slice(0, 3);
+    if (top3.length > 0) {
+      msg += `🏆 *Top Produits de la période :*\n`;
+      top3.forEach((t, i) => {
+        msg += `${i+1}. ${t.name} : ${t.qty} vendus (${formatFCFA(t.total)})\n`;
+      });
+      msg += `---------------------------------\n`;
+    }
+
+    const lowProds = products.filter(p => p.stock <= p.alertThreshold);
+    if (lowProds.length > 0) {
+      msg += `⚠️ *Alertes Réapprovisionnement :*\n`;
+      lowProds.forEach(p => {
+        msg += `▪ ${p.name} : reste ${p.stock} (seuil: ${p.alertThreshold})\n`;
+      });
+    } else {
+      msg += `✅ Tous les stocks sont au vert.\n`;
+    }
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    setTimeout(() => {
+      showToast("💡 Pensez aussi à télécharger votre sauvegarde (.json) !");
+    }, 1500);
+  }
+
+  function exportDataBackup() {
+    const data = {
+      backupDate: new Date().toISOString(),
+      license: license,
+      settings: settings,
+      products: products,
+      sales: sales
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `caisse_backup_${settings.shopName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    settings.lastBackupDate = Date.now();
+    saveData();
+    renderBackupReminder();
+    showToast("Sauvegarde téléchargée ! Vos comptes sont en sécurité 💾");
+  }
+
+  function importDataBackup(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const imported = JSON.parse(e.target.result);
+        if (imported.products && imported.sales) {
+          if (confirm("Attention : Restaurer ce fichier va remplacer vos données actuelles. Confirmer ?")) {
+            products = imported.products;
+            sales = imported.sales;
+            if (imported.settings) settings = imported.settings;
+            if (imported.license) license = imported.license;
+            saveData();
+            initApp();
+            showToast("Données restaurées avec succès !");
+          }
+        } else {
+          alert("Fichier de sauvegarde non reconnu.");
+        }
+      } catch (err) {
+        alert("Erreur lors de la lecture du fichier : " + err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function resetToDefaultData() {
+    if (confirm("Réinitialiser avec le catalogue de démonstration par défaut ? Vos ventes actuelles seront effacées.")) {
+      products = [...DEFAULT_PRODUCTS];
+      sales = [];
+      settings = { ...DEFAULT_SETTINGS };
+      saveData();
+      initApp();
+      showToast("Catalogue de démo réinitialisé !");
+    }
+  }
+
+  function openShopSettings() {
+    document.getElementById('settingShopName').value = settings.shopName || '';
+    document.getElementById('settingShopLocation').value = settings.shopLocation || '';
+    document.getElementById('settingShopPhone').value = settings.shopPhone || '';
+    document.getElementById('settingShopNiu').value = settings.shopNiu || '';
+    document.getElementById('currentPinPreview').textContent = settings.pinCode || '1234';
+    if (license) {
+      document.getElementById('adminCalcShopId').value = license.shopId;
+      adminCalculateCode();
+    }
+    openModal('modalSettings');
+  }
+
+  function saveShopSettings() {
+    const name = document.getElementById('settingShopName').value.trim();
+    const loc = document.getElementById('settingShopLocation').value.trim();
+    const phone = document.getElementById('settingShopPhone').value.trim();
+    const niu = document.getElementById('settingShopNiu').value.trim().toUpperCase();
+
+    if (name) settings.shopName = name;
+    if (loc) settings.shopLocation = loc;
+    settings.shopPhone = phone;
+    settings.shopNiu = niu;
+
+    saveData();
+    updateShopNameUI();
+    closeModal('modalSettings');
+    showToast("Paramètres enregistrés !");
+  }
+
+  function updateShopNameUI() {
+    document.getElementById('headerShopName').innerHTML = `${settings.shopName} <button class="edit-shop-btn" onclick="openShopSettings()" title="Modifier le nom">✏️</button>`;
+    document.getElementById('pinLockShopName').textContent = settings.shopName;
+  }
+
+  function openModal(id) {
+    document.getElementById(id).classList.add('active');
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+  }
+
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (overlay.id === 'modalLicense' && isLicenseExpired()) return;
+      if (e.target === overlay) overlay.classList.remove('active');
+    });
+  });
+
+  window.addEventListener('DOMContentLoaded', initApp);
+</script>
+
+</body>
+</html>
