@@ -1,6 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { buildProspectsFilter, sanitizeSearchTerm, type ProspectStatus } from "@/server/prospects-filter";
 
+export type ProspectTag = {
+  id: string;
+  label: string;
+  color: string;
+};
+
 export type Prospect = {
   id: string;
   name: string;
@@ -12,6 +18,7 @@ export type Prospect = {
   created_at: string;
   assigned_to?: string | null;
   assigned_staff?: { name: string } | null;
+  tags?: ProspectTag[];
 };
 
 export type ProspectDetail = Prospect & {
@@ -24,13 +31,12 @@ export async function getProspect(id: string): Promise<ProspectDetail | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("prospects")
-    .select("id, name, city, category, phone, whatsapp, address, source, notes, status, created_at, assigned_to, assigned_staff:staff!prospects_assigned_to_fkey(name)")
+    .select("id, name, city, category, phone, whatsapp, address, source, notes, status, created_at, assigned_to, assigned_staff:staff!prospects_assigned_to_fkey(name), prospect_tags(tag:tags(id, label, color))")
     .eq("id", id)
     .is("deleted_at", null)
     .single();
 
   if (error || !data) {
-    // Si la clé étrangère spécifique échoue lors de la transition, repli sur select sans relation
     const fallback = await supabase
       .from("prospects")
       .select("id, name, city, category, phone, whatsapp, address, source, notes, status, created_at, assigned_to")
@@ -40,7 +46,18 @@ export async function getProspect(id: string): Promise<ProspectDetail | null> {
     if (fallback.error || !fallback.data) return null;
     return fallback.data as ProspectDetail;
   }
-  return data as unknown as ProspectDetail;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rawTags = (data as any).prospect_tags ?? [];
+  const tags: ProspectTag[] = rawTags
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((pt: any) => pt.tag)
+    .filter(Boolean);
+
+  return {
+    ...(data as unknown as ProspectDetail),
+    tags,
+  };
 }
 
 export type ListProspectsInput = {
@@ -48,6 +65,7 @@ export type ListProspectsInput = {
   city?: string;
   search?: string;
   assignedTo?: string;
+  tagId?: string;
   page?: number;
   pageSize?: number;
 };
@@ -65,9 +83,13 @@ export async function listProspects(input: ListProspectsInput): Promise<ListPros
   const filter = buildProspectsFilter(input);
 
   const supabase = await createClient();
+  const selectClause = filter.tagId
+    ? "id, name, city, category, phone, whatsapp, status, created_at, assigned_to, assigned_staff:staff!prospects_assigned_to_fkey(name), prospect_tags!inner(tag_id, tag:tags(id, label, color))"
+    : "id, name, city, category, phone, whatsapp, status, created_at, assigned_to, assigned_staff:staff!prospects_assigned_to_fkey(name), prospect_tags(tag:tags(id, label, color))";
+
   let query = supabase
     .from("prospects")
-    .select("id, name, city, category, phone, whatsapp, status, created_at, assigned_to", { count: "exact" })
+    .select(selectClause, { count: "exact" })
     .is("deleted_at", null);
 
   if (filter.status) query = query.eq("status", filter.status);
@@ -83,6 +105,9 @@ export async function listProspects(input: ListProspectsInput): Promise<ListPros
     const term = sanitizeSearchTerm(filter.search);
     query = query.or(`name.ilike.%${term}%,phone.ilike.%${term}%`);
   }
+  if (filter.tagId) {
+    query = query.eq("prospect_tags.tag_id", filter.tagId);
+  }
 
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
@@ -93,7 +118,24 @@ export async function listProspects(input: ListProspectsInput): Promise<ListPros
     throw new Error(`listProspects: ${error.message}`);
   }
 
-  return { rows: (data ?? []) as Prospect[], page, pageSize, total: count ?? 0 };
+  // Normalisation des tags
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rows: Prospect[] = (data ?? []).map((row: any) => ({
+    id: row.id,
+    name: row.name,
+    city: row.city,
+    category: row.category,
+    phone: row.phone,
+    whatsapp: row.whatsapp,
+    status: row.status,
+    created_at: row.created_at,
+    assigned_to: row.assigned_to,
+    assigned_staff: row.assigned_staff,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    tags: (row.prospect_tags ?? []).map((pt: any) => pt.tag).filter(Boolean),
+  }));
+
+  return { rows, page, pageSize, total: count ?? 0 };
 }
 
 export type ActivityLogEntry = {

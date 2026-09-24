@@ -6,6 +6,7 @@ export type ProspectsFilterInput = {
   city?: string;
   search?: string;
   assignedTo?: string;
+  tagId?: string;
 };
 
 export type ProspectsFilter = {
@@ -13,6 +14,7 @@ export type ProspectsFilter = {
   city?: string;
   search?: string;
   assignedTo?: string;
+  tagId?: string;
 };
 
 // Échappe un terme utilisateur pour un usage sûr dans un motif ILIKE PostgREST
@@ -35,6 +37,9 @@ export function buildProspectsFilter(input: ProspectsFilterInput): ProspectsFilt
   }
   if (input.assignedTo && input.assignedTo.trim() !== "") {
     filter.assignedTo = input.assignedTo.trim();
+  }
+  if (input.tagId && input.tagId.trim() !== "") {
+    filter.tagId = input.tagId.trim();
   }
 
   return filter;

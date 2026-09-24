@@ -3,10 +3,12 @@ import { notFound } from "next/navigation";
 import { getProspect, listActivity, listCommentsForProspect } from "@/server/prospects";
 import { listRelancesForProspect } from "@/server/relances";
 import { requireActiveStaff } from "@/server/staff";
+import { listAllTags } from "@/server/tags-actions";
 import { StatusSelect } from "@/components/prospects/status-select";
 import { DeleteProspectDialog } from "@/components/prospects/delete-prospect-dialog";
 import { ProspectActivityFeed } from "@/components/prospects/prospect-activity-feed";
 import { ProspectComments } from "@/components/prospects/prospect-comments";
+import { ProspectTagManager } from "@/components/tags/prospect-tag-manager";
 import { RelanceForm } from "@/components/relances/relance-form";
 import { RelanceList } from "@/components/relances/relance-list";
 
@@ -17,25 +19,37 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
   const prospect = await getProspect(id);
   if (!prospect) notFound();
 
-  const [activity, relances, comments, currentStaff] = await Promise.all([
+  const [activity, relances, comments, currentStaff, allTags] = await Promise.all([
     listActivity(id),
     listRelancesForProspect(id),
     listCommentsForProspect(id),
     requireActiveStaff(),
+    listAllTags(),
   ]);
 
   const assignedName = prospect.assigned_staff?.name || (prospect.assigned_to ? "Collaborateur assigné" : "Non assigné");
+  const isEditor = currentStaff.role !== "lecture";
 
   return (
     <div className="max-w-[760px] space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-[var(--fg)]">{prospect.name}</h1>
-          <div className="mt-1 flex items-center gap-2">
+          <div className="mt-1 flex flex-wrap items-center gap-2">
             <StatusSelect prospectId={id} status={prospect.status} />
             <span className="text-xs text-[var(--fg-muted)]">
               Assigné à : <strong className="text-[var(--fg)]">{assignedName}</strong>
             </span>
+          </div>
+
+          {/* Étiquettes / Tags */}
+          <div className="mt-3">
+            <ProspectTagManager
+              prospectId={id}
+              currentTags={prospect.tags ?? []}
+              allTags={allTags}
+              isEditor={isEditor}
+            />
           </div>
         </div>
         <div className="flex gap-2">

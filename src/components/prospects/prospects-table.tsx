@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/prospects/status-badge";
+import { TagBadge } from "@/components/tags/tag-badge";
 import type { Prospect } from "@/server/prospects";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -42,9 +43,23 @@ export function ProspectsTable({ rows }: { rows: Prospect[] }) {
             return (
               <TableRow key={row.id} className="hover:bg-[var(--surface-hover)]">
                 <TableCell className="font-medium text-[var(--fg)]">
-                  <Link href={`/prospects/${row.id}`} className="hover:underline">
-                    {row.name}
-                  </Link>
+                  <div>
+                    <Link href={`/prospects/${row.id}`} className="hover:underline font-semibold">
+                      {row.name}
+                    </Link>
+                    {row.assigned_staff?.name && (
+                      <span className="ml-2 text-[10px] text-[var(--fg-muted)]">
+                        ({row.assigned_staff.name})
+                      </span>
+                    )}
+                  </div>
+                  {row.tags && row.tags.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {row.tags.map((t) => (
+                        <TagBadge key={t.id} tag={t} size="sm" />
+                      ))}
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell className="text-[var(--fg-muted)]">{row.city}</TableCell>
                 <TableCell>

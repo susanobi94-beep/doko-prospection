@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { PROSPECT_STATUSES } from "@/server/prospects-filter";
 import type { StaffMember } from "@/server/staff";
+import type { Tag } from "@/server/tags-actions";
 
 const STATUS_LABELS: Record<string, string> = {
   a_contacter: "À contacter",
@@ -17,9 +18,11 @@ const STATUS_LABELS: Record<string, string> = {
 export function ProspectsFilterBar({
   staffList,
   currentUserId,
+  tagsList,
 }: {
   staffList?: StaffMember[];
   currentUserId?: string;
+  tagsList?: Tag[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -28,7 +31,10 @@ export function ProspectsFilterBar({
   const currentStatus = searchParams.get("status") ?? "";
   const currentCity = searchParams.get("city") ?? "";
   const currentAssignedTo = searchParams.get("assignedTo") ?? "";
-  const hasActiveFilters = Boolean(currentStatus || currentCity || currentAssignedTo || search);
+  const currentTagId = searchParams.get("tagId") ?? "";
+  const hasActiveFilters = Boolean(
+    currentStatus || currentCity || currentAssignedTo || currentTagId || search
+  );
 
   function pushParams(next: Record<string, string | null>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -91,6 +97,22 @@ export function ProspectsFilterBar({
                 {s.name}
               </option>
             ))}
+        </select>
+      )}
+
+      {/* Filtre par étiquette */}
+      {tagsList && tagsList.length > 0 && (
+        <select
+          value={currentTagId}
+          onChange={(e) => pushParams({ tagId: e.target.value || null })}
+          className="h-9 rounded-[6px] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--fg)]"
+        >
+          <option value="">Toutes les étiquettes</option>
+          {tagsList.map((tag) => (
+            <option key={tag.id} value={tag.id}>
+              🏷️ {tag.label}
+            </option>
+          ))}
         </select>
       )}
 

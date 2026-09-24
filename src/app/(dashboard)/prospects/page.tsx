@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listProspects } from "@/server/prospects";
 import { requireActiveStaff, listAllStaff } from "@/server/staff";
+import { listAllTags } from "@/server/tags-actions";
 import { ProspectsTable } from "@/components/prospects/prospects-table";
 import { ProspectsFilterBar } from "@/components/prospects/prospects-filter-bar";
 
@@ -13,13 +14,15 @@ type SearchParams = {
   city?: string;
   search?: string;
   assignedTo?: string;
+  tagId?: string;
 };
 
 export default async function ProspectsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const [params, currentStaff, staffList] = await Promise.all([
+  const [params, currentStaff, staffList, tagsList] = await Promise.all([
     searchParams,
     requireActiveStaff(),
     listAllStaff(),
+    listAllTags(),
   ]);
 
   const currentPage = params.page ? Math.max(1, Number(params.page)) : 1;
@@ -32,6 +35,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
     city: params.city,
     search: params.search,
     assignedTo: params.assignedTo,
+    tagId: params.tagId,
   });
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -43,6 +47,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
     if (params.city) q.set("city", params.city);
     if (params.search) q.set("search", params.search);
     if (params.assignedTo) q.set("assignedTo", params.assignedTo);
+    if (params.tagId) q.set("tagId", params.tagId);
     if (params.pageSize) q.set("pageSize", params.pageSize);
     q.set("page", String(targetPage));
     return `/prospects?${q.toString()}`;
@@ -65,7 +70,11 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
         </Link>
       </div>
 
-      <ProspectsFilterBar staffList={staffList} currentUserId={currentStaff.id} />
+      <ProspectsFilterBar
+        staffList={staffList}
+        currentUserId={currentStaff.id}
+        tagsList={tagsList}
+      />
       <ProspectsTable rows={rows} />
 
       {/* Pagination interactive */}
