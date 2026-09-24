@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProspect, listActivity, listCommentsForProspect } from "@/server/prospects";
+import { getProspect, listCommentsForProspect, getUnifiedTimeline } from "@/server/prospects";
 import { listRelancesForProspect } from "@/server/relances";
 import { requireActiveStaff } from "@/server/staff";
 import { listAllTags } from "@/server/tags-actions";
 import { StatusSelect } from "@/components/prospects/status-select";
 import { DeleteProspectDialog } from "@/components/prospects/delete-prospect-dialog";
-import { ProspectActivityFeed } from "@/components/prospects/prospect-activity-feed";
 import { ProspectComments } from "@/components/prospects/prospect-comments";
 import { ProspectTagManager } from "@/components/tags/prospect-tag-manager";
+import { UnifiedTimeline } from "@/components/prospects/unified-timeline";
 import { RelanceForm } from "@/components/relances/relance-form";
 import { RelanceList } from "@/components/relances/relance-list";
 
@@ -19,12 +19,12 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
   const prospect = await getProspect(id);
   if (!prospect) notFound();
 
-  const [activity, relances, comments, currentStaff, allTags] = await Promise.all([
-    listActivity(id),
+  const [relances, comments, currentStaff, allTags, timeline] = await Promise.all([
     listRelancesForProspect(id),
     listCommentsForProspect(id),
     requireActiveStaff(),
     listAllTags(),
+    getUnifiedTimeline(id),
   ]);
 
   const assignedName = prospect.assigned_staff?.name || (prospect.assigned_to ? "Collaborateur assigné" : "Non assigné");
@@ -127,10 +127,17 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
         isAdmin={currentStaff.role === "admin"}
       />
 
-      {/* Section Historique d'activité */}
+      {/* Section Historique complet unifié */}
       <section className="space-y-3">
-        <h2 className="text-sm font-bold text-[var(--fg)]">Historique d&apos;activité</h2>
-        <ProspectActivityFeed entries={activity} />
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold text-[var(--fg)]">
+            📜 Historique complet & Timeline ({timeline.length})
+          </h2>
+          <span className="text-[11px] text-[var(--fg-muted)]">
+            Activité, notes & relances
+          </span>
+        </div>
+        <UnifiedTimeline events={timeline} />
       </section>
     </div>
   );

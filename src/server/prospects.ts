@@ -243,3 +243,19 @@ export async function listCommentsForProspect(prospectId: string): Promise<Prosp
 
   return (data ?? []) as unknown as ProspectComment[];
 }
+
+export type { TimelineEvent } from "@/server/timeline-utils";
+
+export async function getUnifiedTimeline(prospectId: string) {
+  const { mergeTimelineEvents } = await import("@/server/timeline-utils");
+  const { listRelancesForProspect } = await import("@/server/relances");
+
+  const [activity, comments, relances] = await Promise.all([
+    listActivity(prospectId),
+    listCommentsForProspect(prospectId),
+    listRelancesForProspect(prospectId),
+  ]);
+
+  return mergeTimelineEvents(activity, comments, relances);
+}
+
