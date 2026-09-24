@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guide Pratique Doko Prospection — Commerciaux & Chefs d'Équipe</title>
+  <style>
+    :root {
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --primary-light: #ecfdf5;
+      --secondary: #3b82f6;
+      --secondary-light: #eff6ff;
+      --accent: #f59e0b;
+      --accent-light: #fffbeb;
+      --danger: #ef4444;
+      --danger-light: #fef2f2;
+      --dark: #0f172a;
+      --gray-dark: #334155;
+      --gray-light: #f8fafc;
+      --border: #e2e8f0;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--dark);
+      background-color: #f1f5f9;
+      padding: 16px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #ffffff;
+      padding: 28px 24px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+
+    header p {
+      font-size: 14px;
+      color: #94a3b8;
+    }
+
+    .app-link-banner {
+      background: var(--primary-light);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary-dark);
+    }
+
+    .app-link-banner a {
+      color: var(--primary-dark);
+      text-decoration: underline;
+      word-break: break-all;
+    }
+
+    /* Onglets interactifs */
+    .tabs {
+      display: flex;
+      background: #e2e8f0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 14px 12px;
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: #64748b;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: var(--primary-dark);
+      border-bottom: 3px solid var(--primary);
+    }
+
+    .content-section {
+      display: none;
+      padding: 24px 20px;
+    }
+
+    .content-section.active {
+      display: block;
+    }
+
+    /* Fiches étapes */
+    .step-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      background: #ffffff;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    .step-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 13px;
+      shrink: 0;
+    }
+
+    .step-num.blue { background: var(--secondary); }
+    .step-num.orange { background: var(--accent); }
+
+    .step-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .step-body {
+      font-size: 14px;
+      color: var(--gray-dark);
+      padding-left: 40px;
+    }
+
+    .step-body p {
+      margin-bottom: 8px;
+    }
+
+    .step-body ul {
+      margin-left: 18px;
+      margin-bottom: 8px;
+    }
+
+    .step-body li {
+      margin-bottom: 4px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .badge-green { background: var(--primary-light); color: var(--primary-dark); }
+    .badge-blue { background: var(--secondary-light); color: var(--secondary); }
+    .badge-orange { background: var(--accent-light); color: var(--accent); }
+    .badge-red { background: var(--danger-light); color: var(--danger); }
+
+    .tip-box {
+      background: #f8fafc;
+      border-left: 4px solid var(--primary);
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #475569;
+    }
+
+    .tip-box strong {
+      color: var(--dark);
+    }
+
+    /* Pipeline visuel */
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .pipeline-step {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      font-size: 12px;
+      background: #fafafa;
+    }
+
+    .pipeline-step strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 3px;
+    }
+
+    footer {
+      background: #f8fafc;
+      border-top: 1px solid var(--border);
+      padding: 18px 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 8px; }
+      header { padding: 20px 16px; }
+      header h1 { font-size: 20px; }
+      .step-body { padding-left: 0; margin-top: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>📱 Doko Prospection — Guide de Prise en Main Rapide</h1>
+    <p>Manuel interactif pour Commerciaux Terrain & Chefs d'Équipe</p>
+  </header>
+
+  <div class="app-link-banner">
+    🌐 Accès application : <a href="https://v8es5ridujzumltffmnljmch.178.104.176.113.sslip.io" target="_blank">https://v8es5ridujzumltffmnljmch.178.104.176.113.sslip.io</a>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('commercial')">👤 Guide Commercial Terrain</button>
+    <button class="tab-btn" onclick="switchTab('leader')">👑 Guide Chef d'Équipe</button>
+  </div>
+
+  <!-- SECTION COMMERCIAL TERRAIN -->
+  <div id="section-commercial" class="content-section active">
+    
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num">1</div>
+        <div class="step-title">Connexion sur smartphone (en 10 secondes)</div>
+      </div>
+      <div class="step-body">
+        <p>Sur votre téléphone (Chrome, Safari ou via le lien WhatsApp) :</p>
+        <ul>
+          <li>Ouvrez l'adresse de l'application.</li>
+          <li>Renseignez votre <strong>Email</strong> et votre <strong>Mot de passe</strong> transmis par votre chef d'équipe.</li>
+          <li>Astuce : Ajoutez le site en raccourci sur l'écran d'accueil de votre téléphone pour y accéder comme une application mobile !</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num">2</div>
+        <div class="step-title">Enregistrer une nouvelle boutique sur le terrain</div>
+      </div>
+      <div class="step-body">
+        <p>Dès que vous rencontrez un commerçant ou gérant de boutique :</p>
+        <ul>
+          <li>Cliquez sur le bouton vert <strong>"+ Nouvelle boutique"</strong> (ou "+ Ajouter").</li>
+          <li>Remplissez les informations essentielles :
+            <ul>
+              <li><strong>Nom</strong> : Nom de l'enseigne (ex: <em>Boutique Phone Plus</em>).</li>
+              <li><strong>Téléphone</strong> : Numéro d'appel direct (Orange, MTN, Camtel).</li>
+              <li><strong>Ville / Quartier</strong> : Ex: <em>Douala - Akwa</em>, <em>Yaoundé - Mokolo</em>.</li>
+              <li><strong>Numéro WhatsApp</strong> (si différent de l'appel).</li>
+            </ul>
+          </li>
+          <li>Cliquez sur <strong>"Enregistrer la boutique"</strong>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num">3</div>
+        <div class="step-title">Contacter en 1 clic (Appel & WhatsApp)</div>
+      </div>
+      <div class="step-body">
+        <p>Sur chaque fiche prospect et sur les cartes du tableau :</p>
+        <ul>
+          <li>Cliquez sur 📞 <strong>Numéro</strong> : Votre téléphone lance directement l'appel téléphonique.</li>
+          <li>Cliquez sur 💬 <strong>Icône WhatsApp</strong> : Ouvre instantanément la conversation WhatsApp avec le commerçant sans avoir à enregistrer son contact au préalable dans votre répertoire !</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num">4</div>
+        <div class="step-title">Faire progresser le statut du prospect (Pipeline)</div>
+      </div>
+      <div class="step-body">
+        <p>Un prospect passe par 5 étapes simples :</p>
+        <div class="pipeline-grid">
+          <div class="pipeline-step">
+            <strong>1. À contacter</strong>
+            <span class="badge badge-green">Nouveau</span>
+          </div>
+          <div class="pipeline-step">
+            <strong>2. Contacté</strong>
+            <span class="badge badge-blue">Premier échange</span>
+          </div>
+          <div class="pipeline-step">
+            <strong>3. Intéressé</strong>
+            <span class="badge badge-orange">Veut une démo</span>
+          </div>
+          <div class="pipeline-step">
+            <strong>4. Client</strong>
+            <span class="badge badge-green">Signé & Payé</span>
+          </div>
+          <div class="pipeline-step">
+            <strong>5. Refusé</strong>
+            <span class="badge badge-red">Pas intéressé</span>
+          </div>
+        </div>
+        <p>💡 Sur le <strong>Kanban</strong>, vous pouvez modifier le statut en 1 clic depuis le menu déroulant de la carte.</p>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num">5</div>
+        <div class="step-title">Planifier une Relance (Ne jamais oublier un client)</div>
+      </div>
+      <div class="step-body">
+        <p>Si le gérant vous dit : <em>"Rappelez-moi demain à 16h"</em> ou <em>"Passez lundi prochain"</em> :</p>
+        <ul>
+          <li>Ouvrez la fiche de la boutique.</li>
+          <li>Dans le bloc <strong>Planifier une relance</strong>, choisissez la date et notez la consigne (ex: <em>"Rappeler pour fixer le rendez-vous d'installation"</em>).</li>
+          <li>Le jour convenu, la relance s'affichera en tête de votre <strong>Tableau de bord</strong> et dans l'onglet <strong>⏰ Relances</strong> !</li>
+          <li>Une fois le contact pris, cliquez sur <strong>"Marquer fait"</strong>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num">6</div>
+        <div class="step-title">Notes, Commentaires & Étiquettes (Tags)</div>
+      </div>
+      <div class="step-body">
+        <p>Gardez la trace de chaque discussion :</p>
+        <ul>
+          <li><strong>Commentaires</strong> : Ajoutez une note rapide (ex: <em>"Le gérant s'appelle M. Kamdem, favorable à la solution mais attend l'accord de son associé"</em>). Toute l'équipe peut la lire.</li>
+          <li><strong>Étiquettes (Tags)</strong> : Classez vos boutiques avec des tags visuels : <span class="badge badge-green">🏷️ Chaud</span>, <span class="badge badge-blue">🏷️ Décideur</span>, <span class="badge badge-orange">🏷️ Grossiste</span>.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SECTION CHEF D'ÉQUIPE -->
+  <div id="section-leader" class="content-section">
+    
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num blue">1</div>
+        <div class="step-title">Piloter votre secteur (Douala, Yaoundé, etc.)</div>
+      </div>
+      <div class="step-body">
+        <p>En tant que Chef d'Équipe ou Superviseur :</p>
+        <ul>
+          <li>Rendez-vous dans <strong>🏢 Équipes & Secteurs</strong> (accessible aux administrateurs/superviseurs).</li>
+          <li>Visualisez l'organisation territoriale :
+            <ul>
+              <li><strong>Zone Douala</strong> : <em>Akwa, Bonabéri, Marché Central, Makèpè/Bonamoussadi</em></li>
+              <li><strong>Zone Yaoundé</strong> : <em>Mokolo, Bastos / Centre-ville</em></li>
+              <li><strong>Bafoussam, Abidjan</strong>, etc.</li>
+            </ul>
+          </li>
+          <li>Cliquez sur <strong>"+ Créer une équipe / sous-équipe"</strong> pour ouvrir un nouveau quartier ou un nouveau secteur de prospection à tout moment.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num blue">2</div>
+        <div class="step-title">Affecter les commerciaux aux sous-équipes</div>
+      </div>
+      <div class="step-body">
+        <p>Dans la page <strong>🏢 Équipes & Secteurs</strong> :</p>
+        <ul>
+          <li>Chaque sous-équipe dispose d'un menu déroulant <strong>"+ Affecter un commercial"</strong>.</li>
+          <li>Sélectionnez simplement le commercial dans la liste : il est immédiatement rattaché au quartier sans aucun rechargement de page.</li>
+          <li>Vous pouvez retirer un commercial d'une zone en cliquant sur la petite croix <strong>×</strong> à côté de son nom.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num blue">3</div>
+        <div class="step-title">Suivre les KPIs de conversion en temps réel</div>
+      </div>
+      <div class="step-body">
+        <p>Sur la page d'accueil (<strong>📊 Tableau de bord</strong>) :</p>
+        <ul>
+          <li>Consultez le tableau <strong>"🏢 Performance par Équipe & Zone"</strong>.</li>
+          <li>Comparez instantanément :
+            <ul>
+              <li>Le volume total de boutiques prospectées par quartier.</li>
+              <li>Le nombre de contacts établis.</li>
+              <li>Le nombre de <strong>Clients signés</strong>.</li>
+              <li>Le <strong>Taux de conversion (%)</strong> pour identifier les zones les plus performantes.</li>
+            </ul>
+          </li>
+          <li>Cliquez sur le nom d'un quartier pour filtrer immédiatement toutes les boutiques qui lui sont rattachées !</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num blue">4</div>
+        <div class="step-title">Animer le point d'équipe quotidien avec le Kanban</div>
+      </div>
+      <div class="step-body">
+        <p>Pour vos réunions de synchronisation (le matin ou en fin de journée) :</p>
+        <ul>
+          <li>Allez dans <strong>🏪 Prospects & Boutiques</strong> et basculez en vue <strong>Kanban</strong>.</li>
+          <li>Filtrez par votre secteur (ex: <em>Douala - Akwa</em>) ou par commercial.</li>
+          <li>Passez en revue les boutiques dans les colonnes <strong>"Contacté"</strong> et <strong>"Intéressé"</strong> pour aider le commercial à lever les objections et convertir en <strong>"Client"</strong>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num blue">5</div>
+        <div class="step-title">Importer des listes de boutiques en masse (CSV)</div>
+      </div>
+      <div class="step-body">
+        <p>Si vous disposez d'un fichier Excel ou d'une base de données d'entreprises :</p>
+        <ul>
+          <li>Allez dans <strong>📥 Importer CSV</strong>.</li>
+          <li>Glissez-déposez votre fichier CSV.</li>
+          <li>Associez les colonnes (Nom, Téléphone, Ville, Catégorie).</li>
+          <li>Sélectionnez le commercial à qui attribuer ces boutiques.</li>
+          <li>Le système vérifie automatiquement les doublons pour ne jamais écraser un numéro déjà présent !</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <p><strong>Doko Prospection</strong> • Manuel utilisateur officiel • Conçu pour le terrain au Cameroun et en Afrique</p>
+  </footer>
+</div>
+
+<script>
+  function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+
+    if (tabName === 'commercial') {
+      document.querySelectorAll('.tab-btn')[0].classList.add('active');
+      document.getElementById('section-commercial').classList.add('active');
+    } else {
+      document.querySelectorAll('.tab-btn')[1].classList.add('active');
+      document.getElementById('section-leader').classList.add('active');
+    }
+  }
+</script>
+
+</body>
+</html>
