@@ -18,6 +18,8 @@ export type Prospect = {
   created_at: string;
   assigned_to?: string | null;
   assigned_staff?: { name: string } | null;
+  team_id?: string | null;
+  team?: { id: string; name: string } | null;
   tags?: ProspectTag[];
 };
 
@@ -31,7 +33,7 @@ export async function getProspect(id: string): Promise<ProspectDetail | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("prospects")
-    .select("id, name, city, category, phone, whatsapp, address, source, notes, status, created_at, assigned_to, assigned_staff:staff!prospects_assigned_to_fkey(name), prospect_tags(tag:tags(id, label, color))")
+    .select("id, name, city, category, phone, whatsapp, address, source, notes, status, created_at, assigned_to, assigned_staff:staff!prospects_assigned_to_fkey(name), team:teams(id, name), prospect_tags(tag:tags(id, label, color))")
     .eq("id", id)
     .is("deleted_at", null)
     .single();
@@ -66,6 +68,7 @@ export type ListProspectsInput = {
   search?: string;
   assignedTo?: string;
   tagId?: string;
+  teamId?: string;
   page?: number;
   pageSize?: number;
 };
@@ -84,8 +87,8 @@ export async function listProspects(input: ListProspectsInput): Promise<ListPros
 
   const supabase = await createClient();
   const selectClause = filter.tagId
-    ? "id, name, city, category, phone, whatsapp, status, created_at, assigned_to, assigned_staff:staff!prospects_assigned_to_fkey(name), prospect_tags!inner(tag_id, tag:tags(id, label, color))"
-    : "id, name, city, category, phone, whatsapp, status, created_at, assigned_to, assigned_staff:staff!prospects_assigned_to_fkey(name), prospect_tags(tag:tags(id, label, color))";
+    ? "id, name, city, category, phone, whatsapp, status, created_at, assigned_to, assigned_staff:staff!prospects_assigned_to_fkey(name), team:teams(id, name), prospect_tags!inner(tag_id, tag:tags(id, label, color))"
+    : "id, name, city, category, phone, whatsapp, status, created_at, assigned_to, assigned_staff:staff!prospects_assigned_to_fkey(name), team:teams(id, name), prospect_tags(tag:tags(id, label, color))";
 
   let query = supabase
     .from("prospects")
@@ -109,6 +112,29 @@ export async function listProspects(input: ListProspectsInput): Promise<ListPros
     query = query.eq("prospect_tags.tag_id", filter.tagId);
   }
 
+  // Filtrage récursif par équipe / sous-équipe
+  if (filter.teamId) {
+    const { getAllDescendantTeamIds } = await import("@/lib/team-tree-utils");
+    const { data: allTeams } = await supabase.from("teams").select("id, name, parent_id, city, country");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const descendantIds = getAllDescendantTeamIds(filter.teamId, (allTeams ?? []) as any);
+
+    const { data: teamStaff } = await supabase
+      .from("staff")
+      .select("id")
+      .in("team_id", descendantIds);
+
+    const staffIds = (teamStaff ?? []).map((s) => s.id);
+
+    if (staffIds.length > 0) {
+      query = query.or(
+        `team_id.in.(${descendantIds.join(",")}),assigned_to.in.(${staffIds.join(",")})`
+      );
+    } else {
+      query = query.in("team_id", descendantIds);
+    }
+  }
+
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
@@ -118,7 +144,7 @@ export async function listProspects(input: ListProspectsInput): Promise<ListPros
     throw new Error(`listProspects: ${error.message}`);
   }
 
-  // Normalisation des tags
+  // Normalisation des tags et équipes
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rows: Prospect[] = (data ?? []).map((row: any) => ({
     id: row.id,
@@ -131,6 +157,8 @@ export async function listProspects(input: ListProspectsInput): Promise<ListPros
     created_at: row.created_at,
     assigned_to: row.assigned_to,
     assigned_staff: row.assigned_staff,
+    team_id: row.team_id,
+    team: row.team,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tags: (row.prospect_tags ?? []).map((pt: any) => pt.tag).filter(Boolean),
   }));

@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { PROSPECT_STATUSES } from "@/server/prospects-filter";
 import type { StaffMember } from "@/server/staff";
 import type { Tag } from "@/server/tags-actions";
+import { buildTeamTree, type FlatTeam, type TeamNode } from "@/lib/team-tree-utils";
+import React, { Fragment } from "react";
 
 const STATUS_LABELS: Record<string, string> = {
   a_contacter: "À contacter",
@@ -15,14 +17,28 @@ const STATUS_LABELS: Record<string, string> = {
   refuse: "Refusé",
 };
 
+function renderTeamOptions(nodes: TeamNode[], depth = 0): React.ReactNode {
+  return nodes.map((node) => (
+    <Fragment key={node.id}>
+      <option value={node.id}>
+        {depth === 0 ? "📍 " : "\u00A0\u00A0".repeat(depth) + "↳ "}
+        {node.name}
+      </option>
+      {node.children && node.children.length > 0 && renderTeamOptions(node.children, depth + 1)}
+    </Fragment>
+  ));
+}
+
 export function ProspectsFilterBar({
   staffList,
   currentUserId,
   tagsList,
+  teamsList,
 }: {
   staffList?: StaffMember[];
   currentUserId?: string;
   tagsList?: Tag[];
+  teamsList?: FlatTeam[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -32,8 +48,9 @@ export function ProspectsFilterBar({
   const currentCity = searchParams.get("city") ?? "";
   const currentAssignedTo = searchParams.get("assignedTo") ?? "";
   const currentTagId = searchParams.get("tagId") ?? "";
+  const currentTeamId = searchParams.get("teamId") ?? "";
   const hasActiveFilters = Boolean(
-    currentStatus || currentCity || currentAssignedTo || currentTagId || search
+    currentStatus || currentCity || currentAssignedTo || currentTagId || currentTeamId || search
   );
 
   function pushParams(next: Record<string, string | null>) {
@@ -113,6 +130,18 @@ export function ProspectsFilterBar({
               🏷️ {tag.label}
             </option>
           ))}
+        </select>
+      )}
+
+      {/* Filtre par équipe ou sous-équipe */}
+      {teamsList && teamsList.length > 0 && (
+        <select
+          value={currentTeamId}
+          onChange={(e) => pushParams({ teamId: e.target.value || null })}
+          className="h-9 rounded-[6px] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--fg)] font-medium"
+        >
+          <option value="">Toutes les équipes & zones</option>
+          {renderTeamOptions(buildTeamTree(teamsList))}
         </select>
       )}
 

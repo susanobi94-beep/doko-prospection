@@ -98,10 +98,17 @@ export function ProspectsKanban({ rows }: { rows: Prospect[] }) {
 
                       {/* Métadonnées : Ville & Assignation */}
                       <div className="mt-1 flex items-center justify-between text-[11px] text-[var(--fg-muted)]">
-                        <span>📍 {prospect.city}</span>
+                        <span className="truncate">
+                          📍 {prospect.city}
+                          {prospect.team?.name && (
+                            <span className="ml-1 text-[10px] text-emerald-600 font-medium truncate">
+                              • {prospect.team.name}
+                            </span>
+                          )}
+                        </span>
                         {prospect.assigned_staff?.name && (
                           <span
-                            className="font-medium text-[var(--fg)]"
+                            className="font-medium text-[var(--fg)] shrink-0 ml-1"
                             title={`Assigné à ${prospect.assigned_staff.name}`}
                           >
                             👤 {prospect.assigned_staff.name.split(" ")[0]}

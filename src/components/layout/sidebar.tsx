@@ -25,12 +25,20 @@ export function Sidebar({ role }: { role?: string }) {
         ))}
 
         {role === "admin" && (
-          <Link
-            href="/settings/team"
-            className="shrink-0 rounded-[6px] px-3 py-2 text-sm font-medium text-[var(--fg)] transition-colors duration-[120ms] ease-out hover:bg-[var(--surface-hover)]"
-          >
-            👥 Gestion Équipe
-          </Link>
+          <>
+            <Link
+              href="/settings/teams"
+              className="shrink-0 rounded-[6px] px-3 py-2 text-sm font-medium text-[var(--fg)] transition-colors duration-[120ms] ease-out hover:bg-[var(--surface-hover)]"
+            >
+              🏢 Équipes & Secteurs
+            </Link>
+            <Link
+              href="/settings/team"
+              className="shrink-0 rounded-[6px] px-3 py-2 text-sm font-medium text-[var(--fg)] transition-colors duration-[120ms] ease-out hover:bg-[var(--surface-hover)]"
+            >
+              👥 Utilisateurs & Rôles
+            </Link>
+          </>
         )}
 
         {role !== "lecture" && (

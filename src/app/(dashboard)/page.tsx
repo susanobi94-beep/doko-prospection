@@ -2,7 +2,9 @@ import Link from "next/link";
 import { requireActiveStaff } from "@/server/staff";
 import { getDashboardStats } from "@/server/prospects";
 import { listDueRelances, countOverdueRelances } from "@/server/relances";
+import { getTeamKpiStats } from "@/server/team-hierarchy-actions";
 import { RelanceList } from "@/components/relances/relance-list";
+import { TeamKpiCard } from "@/components/dashboard/team-kpi-card";
 
 export const dynamic = "force-dynamic";
 
@@ -15,11 +17,12 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 export default async function DashboardIndexPage() {
-  const [currentStaff, stats, dueRelances, overdueCount] = await Promise.all([
+  const [currentStaff, stats, dueRelances, overdueCount, teamKpis] = await Promise.all([
     requireActiveStaff(),
     getDashboardStats(),
     listDueRelances(),
     countOverdueRelances(),
+    getTeamKpiStats(),
   ]);
 
   const total = stats.totalProspects;
@@ -136,6 +139,9 @@ export default async function DashboardIndexPage() {
           })}
         </div>
       </div>
+
+      {/* Performance des Équipes & Secteurs (Cameroun & Afrique) */}
+      <TeamKpiCard teamKpis={teamKpis} />
 
       {/* Relances prioritaires à traiter */}
       <div className="space-y-3">

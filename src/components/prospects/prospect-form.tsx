@@ -45,7 +45,7 @@ export function ProspectForm({
 
       <Field label="Nom de la boutique / entreprise" name="name" defaultValue={defaultValues?.name} error={fieldErrors.name} required />
       <Field label="Téléphone principal" name="phone" defaultValue={defaultValues?.phone} error={fieldErrors.phone} required />
-      <Field label="Ville (ex: Douala, Yaoundé, Montréal...)" name="city" defaultValue={defaultValues?.city} error={fieldErrors.city} required />
+      <Field label="Ville (ex: Douala, Yaoundé, Bafoussam...)" name="city" defaultValue={defaultValues?.city} error={fieldErrors.city} required />
 
       <div>
         <Label htmlFor="category">Catégorie</Label>
@@ -60,7 +60,7 @@ export function ProspectForm({
           <option value="">Choisir…</option>
           <option value="boutique_telephone">Boutique téléphone & accessoires</option>
           <option value="pme">PME commerciale / Commerce de détail</option>
-          <option value="diaspora">Boutique / Contact Diaspora (Canada, etc.)</option>
+          <option value="diaspora">Boutique / Contact Diaspora</option>
         </select>
         {fieldErrors.category && (
           <p id="category-error" className="mt-1 text-xs text-[var(--destructive)]">

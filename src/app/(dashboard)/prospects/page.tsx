@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listProspects } from "@/server/prospects";
 import { requireActiveStaff, listAllStaff } from "@/server/staff";
 import { listAllTags } from "@/server/tags-actions";
+import { listAllTeamsWithStats } from "@/server/team-hierarchy-actions";
 import { ProspectsTable } from "@/components/prospects/prospects-table";
 import { ProspectsKanban } from "@/components/prospects/prospects-kanban";
 import { ProspectsFilterBar } from "@/components/prospects/prospects-filter-bar";
@@ -17,15 +18,17 @@ type SearchParams = {
   search?: string;
   assignedTo?: string;
   tagId?: string;
+  teamId?: string;
   view?: "table" | "kanban";
 };
 
 export default async function ProspectsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const [params, currentStaff, staffList, tagsList] = await Promise.all([
+  const [params, currentStaff, staffList, tagsList, teamsList] = await Promise.all([
     searchParams,
     requireActiveStaff(),
     listAllStaff(),
     listAllTags(),
+    listAllTeamsWithStats(),
   ]);
 
   const currentView = params.view === "kanban" ? "kanban" : "table";
@@ -40,6 +43,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
     search: params.search,
     assignedTo: params.assignedTo,
     tagId: params.tagId,
+    teamId: params.teamId,
   });
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -52,6 +56,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
     if (params.search) q.set("search", params.search);
     if (params.assignedTo) q.set("assignedTo", params.assignedTo);
     if (params.tagId) q.set("tagId", params.tagId);
+    if (params.teamId) q.set("teamId", params.teamId);
     if (params.view) q.set("view", params.view);
     if (params.pageSize) q.set("pageSize", params.pageSize);
     q.set("page", String(targetPage));
@@ -88,6 +93,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
         staffList={staffList}
         currentUserId={currentStaff.id}
         tagsList={tagsList}
+        teamsList={teamsList}
       />
 
       {currentView === "kanban" ? (

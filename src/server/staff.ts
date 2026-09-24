@@ -18,6 +18,8 @@ export type StaffMember = {
   name: string;
   role: StaffRole;
   active: boolean;
+  team_id?: string | null;
+  team?: { id: string; name: string; city: string | null } | null;
   created_at: string;
 };
 
@@ -87,19 +89,22 @@ export async function listAllStaff(): Promise<StaffMember[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("staff")
-    .select("id, email, name, role, active, created_at")
+    .select("id, email, name, role, active, team_id, created_at, team:teams(id, name, city)")
     .order("name", { ascending: true });
 
   if (error) {
     return [];
   }
 
-  return (data ?? []).map((row) => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data ?? []).map((row: any) => ({
     id: row.id,
     email: row.email,
     name: row.name,
     role: (row.role ?? "commercial") as StaffRole,
     active: row.active ?? true,
+    team_id: row.team_id,
+    team: row.team,
     created_at: row.created_at,
   }));
 }
