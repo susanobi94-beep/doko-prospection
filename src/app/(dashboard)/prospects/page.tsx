@@ -70,6 +70,12 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
         <div className="flex flex-wrap items-center gap-2">
           <ViewSwitcher currentView={currentView} />
           <Link
+            href="/prospects/import"
+            className="rounded-[6px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--fg)] hover:bg-[var(--surface-hover)] transition-colors shadow-xs"
+          >
+            📥 Importer CSV
+          </Link>
+          <Link
             href="/prospects/new"
             className="rounded-[6px] bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-fg)] hover:bg-[var(--primary-hover)] transition-colors shadow-sm"
           >

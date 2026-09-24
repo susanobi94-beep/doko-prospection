@@ -33,12 +33,21 @@ export function Sidebar({ role }: { role?: string }) {
           </Link>
         )}
 
+        {role !== "lecture" && (
+          <Link
+            href="/prospects/import"
+            className="shrink-0 rounded-[6px] px-3 py-2 text-sm font-medium text-[var(--fg)] transition-colors duration-[120ms] ease-out hover:bg-[var(--surface-hover)]"
+          >
+            📥 Importer CSV
+          </Link>
+        )}
+
         <a
           href="/api/export"
           download
           className="shrink-0 rounded-[6px] px-3 py-2 text-sm font-medium text-[var(--fg-muted)] transition-colors duration-[120ms] ease-out hover:bg-[var(--surface-hover)] hover:text-[var(--fg)]"
         >
-          📥 Export CSV
+          📤 Exporter CSV
         </a>
       </nav>
     </aside>
