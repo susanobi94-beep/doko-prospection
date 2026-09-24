@@ -177,3 +177,27 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     byStatus,
   };
 }
+
+export type ProspectComment = {
+  id: string;
+  prospect_id: string;
+  author_id: string | null;
+  body: string;
+  created_at: string;
+  author?: { name: string } | null;
+};
+
+export async function listCommentsForProspect(prospectId: string): Promise<ProspectComment[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("comments")
+    .select("id, prospect_id, author_id, body, created_at, author:staff(name)")
+    .eq("prospect_id", prospectId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return [];
+  }
+
+  return (data ?? []) as unknown as ProspectComment[];
+}

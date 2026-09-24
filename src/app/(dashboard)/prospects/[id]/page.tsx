@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProspect, listActivity } from "@/server/prospects";
+import { getProspect, listActivity, listCommentsForProspect } from "@/server/prospects";
 import { listRelancesForProspect } from "@/server/relances";
+import { requireActiveStaff } from "@/server/staff";
 import { StatusSelect } from "@/components/prospects/status-select";
 import { DeleteProspectDialog } from "@/components/prospects/delete-prospect-dialog";
 import { ProspectActivityFeed } from "@/components/prospects/prospect-activity-feed";
+import { ProspectComments } from "@/components/prospects/prospect-comments";
 import { RelanceForm } from "@/components/relances/relance-form";
 import { RelanceList } from "@/components/relances/relance-list";
 
@@ -15,9 +17,11 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
   const prospect = await getProspect(id);
   if (!prospect) notFound();
 
-  const [activity, relances] = await Promise.all([
+  const [activity, relances, comments, currentStaff] = await Promise.all([
     listActivity(id),
     listRelancesForProspect(id),
+    listCommentsForProspect(id),
+    requireActiveStaff(),
   ]);
 
   const assignedName = prospect.assigned_staff?.name || (prospect.assigned_to ? "Collaborateur assigné" : "Non assigné");
@@ -100,6 +104,14 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
           />
         </div>
       </section>
+
+      {/* Section Commentaires / Notes datées */}
+      <ProspectComments
+        prospectId={id}
+        comments={comments}
+        currentUserId={currentStaff.id}
+        isAdmin={currentStaff.role === "admin"}
+      />
 
       {/* Section Historique d'activité */}
       <section className="space-y-3">

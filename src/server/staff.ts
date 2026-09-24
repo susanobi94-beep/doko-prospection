@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { evaluateStaffAccess, evaluateAdminAccess } from "@/server/staff-access";
+import { evaluateStaffAccess, evaluateAdminAccess, evaluateEditorAccess } from "@/server/staff-access";
 
 export type StaffRole = "admin" | "commercial" | "lecture";
 
@@ -63,6 +63,18 @@ export async function requireActiveStaff(): Promise<ActiveStaff> {
 export async function requireAdmin(): Promise<ActiveStaff> {
   const staff = await requireActiveStaff();
   if (!evaluateAdminAccess(staff)) {
+    redirect("/access-denied");
+  }
+  return staff;
+}
+
+/**
+ * Vérifie que le membre connecté a les droits d'édition (admin ou commercial).
+ * Redirige vers /access-denied si le compte est en lecture seule.
+ */
+export async function requireEditorStaff(): Promise<ActiveStaff> {
+  const staff = await requireActiveStaff();
+  if (!evaluateEditorAccess(staff)) {
     redirect("/access-denied");
   }
   return staff;
