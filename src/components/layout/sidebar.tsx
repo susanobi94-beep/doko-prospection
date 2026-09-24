@@ -58,14 +58,13 @@ export function Sidebar({ role }: { role?: string }) {
           📤 Exporter CSV
         </a>
 
-        <a
-          href="/guide-formation.html"
+        <Link
+          href="/guide"
           target="_blank"
-          rel="noopener noreferrer"
           className="shrink-0 rounded-[6px] px-3 py-2 text-sm font-medium text-[var(--primary)] transition-colors duration-[120ms] ease-out hover:bg-[var(--surface-hover)]"
         >
           📖 Guide & Formation
-        </a>
+        </Link>
       </nav>
     </aside>
   );

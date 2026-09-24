@@ -14,6 +14,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: "/guide-formation.html",
+        destination: "/guide",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
