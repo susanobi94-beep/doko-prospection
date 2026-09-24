@@ -12,7 +12,7 @@ export type Tag = {
   created_at?: string;
 };
 
-export const CreateTagSchema = z.object({
+const CreateTagSchema = z.object({
   label: z
     .string()
     .trim()

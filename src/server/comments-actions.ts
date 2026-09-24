@@ -5,7 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireEditorStaff, requireActiveStaff } from "@/server/staff";
 
-export const CommentInputSchema = z.object({
+const CommentInputSchema = z.object({
   prospectId: z.string().uuid("ID prospect invalide"),
   body: z
     .string()
