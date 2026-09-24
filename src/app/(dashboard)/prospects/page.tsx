@@ -3,7 +3,9 @@ import { listProspects } from "@/server/prospects";
 import { requireActiveStaff, listAllStaff } from "@/server/staff";
 import { listAllTags } from "@/server/tags-actions";
 import { ProspectsTable } from "@/components/prospects/prospects-table";
+import { ProspectsKanban } from "@/components/prospects/prospects-kanban";
 import { ProspectsFilterBar } from "@/components/prospects/prospects-filter-bar";
+import { ViewSwitcher } from "@/components/prospects/view-switcher";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +17,7 @@ type SearchParams = {
   search?: string;
   assignedTo?: string;
   tagId?: string;
+  view?: "table" | "kanban";
 };
 
 export default async function ProspectsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
@@ -25,8 +28,9 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
     listAllTags(),
   ]);
 
+  const currentView = params.view === "kanban" ? "kanban" : "table";
   const currentPage = params.page ? Math.max(1, Number(params.page)) : 1;
-  const pageSize = params.pageSize ? Number(params.pageSize) : 25;
+  const pageSize = currentView === "kanban" ? 150 : (params.pageSize ? Number(params.pageSize) : 25);
 
   const { rows, total } = await listProspects({
     page: currentPage,
@@ -48,6 +52,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
     if (params.search) q.set("search", params.search);
     if (params.assignedTo) q.set("assignedTo", params.assignedTo);
     if (params.tagId) q.set("tagId", params.tagId);
+    if (params.view) q.set("view", params.view);
     if (params.pageSize) q.set("pageSize", params.pageSize);
     q.set("page", String(targetPage));
     return `/prospects?${q.toString()}`;
@@ -62,12 +67,15 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
             {total} prospect{total > 1 ? "s" : ""} enregistré{total > 1 ? "s" : ""} au total
           </p>
         </div>
-        <Link
-          href="/prospects/new"
-          className="rounded-[6px] bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-fg)] hover:bg-[var(--primary-hover)] transition-colors shadow-sm"
-        >
-          + Ajouter une boutique
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <ViewSwitcher currentView={currentView} />
+          <Link
+            href="/prospects/new"
+            className="rounded-[6px] bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-fg)] hover:bg-[var(--primary-hover)] transition-colors shadow-sm"
+          >
+            + Ajouter une boutique
+          </Link>
+        </div>
       </div>
 
       <ProspectsFilterBar
@@ -75,10 +83,15 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
         currentUserId={currentStaff.id}
         tagsList={tagsList}
       />
-      <ProspectsTable rows={rows} />
 
-      {/* Pagination interactive */}
-      {totalPages > 1 && (
+      {currentView === "kanban" ? (
+        <ProspectsKanban rows={rows} />
+      ) : (
+        <ProspectsTable rows={rows} />
+      )}
+
+      {/* Pagination interactive (uniquement en vue tableau) */}
+      {currentView === "table" && totalPages > 1 && (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4 text-sm">
           <p className="text-xs text-[var(--fg-muted)]">
             Affichage de la page <span className="font-semibold text-[var(--fg)]">{currentPage}</span> sur{" "}
