@@ -98,10 +98,22 @@ export function ProspectsKanban({ rows }: { rows: Prospect[] }) {
 
                       {/* Métadonnées : Ville & Assignation */}
                       <div className="mt-1 flex items-center justify-between text-[11px] text-[var(--fg-muted)]">
-                        <span className="truncate">
-                          📍 {prospect.city}
+                        <span className="truncate flex items-center gap-1">
+                          <span>📍 {prospect.city}</span>
+                          {prospect.latitude && prospect.longitude && (
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${prospect.latitude},${prospect.longitude}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Ouvrir dans Google Maps"
+                              className="text-[10px] text-blue-600 hover:underline font-semibold shrink-0"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Maps
+                            </a>
+                          )}
                           {prospect.team?.name && (
-                            <span className="ml-1 text-[10px] text-emerald-600 font-medium truncate">
+                            <span className="ml-0.5 text-[10px] text-emerald-600 font-medium truncate">
                               • {prospect.team.name}
                             </span>
                           )}

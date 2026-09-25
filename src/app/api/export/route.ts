@@ -3,7 +3,7 @@ import { evaluateStaffAccess } from "@/server/staff-access";
 import { buildProspectsFilter, sanitizeSearchTerm } from "@/server/prospects-filter";
 import { writeCsvRow } from "@/lib/csv";
 
-const HEADER = ["name", "city", "category", "phone", "whatsapp", "status", "created_at"];
+const HEADER = ["name", "city", "category", "phone", "whatsapp", "status", "created_at", "latitude", "longitude"];
 
 export async function GET(request: Request) {
   const supabase = await createClient();
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
 
   let query = supabase
     .from("prospects")
-    .select("name, city, category, phone, whatsapp, status, created_at")
+    .select("name, city, category, phone, whatsapp, status, created_at, latitude, longitude")
     .is("deleted_at", null);
 
   if (filter.status) query = query.eq("status", filter.status);
@@ -62,6 +62,8 @@ export async function GET(request: Request) {
               row.whatsapp ?? "",
               row.status,
               row.created_at,
+              row.latitude !== null && row.latitude !== undefined ? String(row.latitude) : "",
+              row.longitude !== null && row.longitude !== undefined ? String(row.longitude) : "",
             ])
           )
         );

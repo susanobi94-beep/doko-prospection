@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,15 +23,64 @@ export function ProspectForm({
     source?: string | null;
     notes?: string | null;
     assigned_to?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
   };
   staffList?: StaffMember[];
 }) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState<ProspectFormState, FormData>(action, null);
 
+  const [latitude, setLatitude] = useState<string>(
+    defaultValues?.latitude !== undefined && defaultValues?.latitude !== null ? String(defaultValues.latitude) : ""
+  );
+  const [longitude, setLongitude] = useState<string>(
+    defaultValues?.longitude !== undefined && defaultValues?.longitude !== null ? String(defaultValues.longitude) : ""
+  );
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [gpsMessage, setGpsMessage] = useState<{ text: string; isError?: boolean } | null>(null);
+
   useEffect(() => {
     if (state?.ok && state.redirectTo) router.push(state.redirectTo);
   }, [state, router]);
+
+  const handleCaptureGps = () => {
+    if (typeof window === "undefined" || !navigator.geolocation) {
+      setGpsMessage({ text: "La géolocalisation n'est pas supportée par votre navigateur.", isError: true });
+      return;
+    }
+    setGpsLoading(true);
+    setGpsMessage(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const acc = Math.round(pos.coords.accuracy);
+        setLatitude(lat.toFixed(6));
+        setLongitude(lng.toFixed(6));
+        setGpsLoading(false);
+        setGpsMessage({ text: `Position GPS détectée avec succès (précision ±${acc}m) !`, isError: false });
+      },
+      (err) => {
+        setGpsLoading(false);
+        let msg = "Impossible de récupérer votre position GPS.";
+        if (err.code === 1) {
+          msg = "Veuillez autoriser l'accès GPS dans votre navigateur.";
+        } else if (err.code === 2) {
+          msg = "Signal GPS indisponible ou trop faible. Réessayez à ciel ouvert.";
+        } else if (err.code === 3) {
+          msg = "Délai dépassé pour la capture GPS. Réessayez.";
+        }
+        setGpsMessage({ text: msg, isError: true });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      }
+    );
+  };
 
   const fieldErrors = state?.fieldErrors ?? {};
 
@@ -93,6 +142,108 @@ export function ProspectForm({
 
       <Field label="Numéro WhatsApp (si différent)" name="whatsapp" defaultValue={defaultValues?.whatsapp ?? ""} />
       <Field label="Adresse physique / Quartier" name="address" defaultValue={defaultValues?.address ?? ""} />
+
+      {/* Section Coordonnées GPS Terrain */}
+      <div className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] p-3.5 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-semibold text-[var(--fg)] flex items-center gap-1.5">
+              <span>📍</span> Localisation GPS Terrain (Optionnel)
+            </h3>
+            <p className="text-xs text-[var(--fg-muted)]">
+              Capturez la position exacte de la boutique pour la navigation Google Maps et les tournées.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleCaptureGps}
+            disabled={gpsLoading}
+            className="inline-flex items-center gap-1.5 rounded-[6px] bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 disabled:opacity-60 transition-colors"
+          >
+            {gpsLoading ? (
+              <>
+                <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Détection GPS en cours…
+              </>
+            ) : (
+              <>📍 Capturer ma position GPS</>
+            )}
+          </button>
+        </div>
+
+        {gpsMessage && (
+          <div
+            className={`rounded-[6px] px-3 py-2 text-xs font-medium ${
+              gpsMessage.isError
+                ? "border border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300"
+                : "border border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300"
+            }`}
+          >
+            {gpsMessage.text}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <Label htmlFor="latitude" className="text-xs">Latitude</Label>
+            <Input
+              id="latitude"
+              name="latitude"
+              type="number"
+              step="any"
+              placeholder="ex: 4.051056"
+              value={latitude}
+              onChange={(e) => setLatitude(e.target.value)}
+              className="mt-1 font-mono text-xs"
+            />
+            {fieldErrors.latitude && (
+              <p className="mt-1 text-xs text-[var(--destructive)]">{fieldErrors.latitude}</p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="longitude" className="text-xs">Longitude</Label>
+            <Input
+              id="longitude"
+              name="longitude"
+              type="number"
+              step="any"
+              placeholder="ex: 9.767868"
+              value={longitude}
+              onChange={(e) => setLongitude(e.target.value)}
+              className="mt-1 font-mono text-xs"
+            />
+            {fieldErrors.longitude && (
+              <p className="mt-1 text-xs text-[var(--destructive)]">{fieldErrors.longitude}</p>
+            )}
+          </div>
+        </div>
+
+        {latitude && longitude && !isNaN(Number(latitude)) && !isNaN(Number(longitude)) && (
+          <div className="flex items-center gap-2 pt-1 text-xs">
+            <span className="text-emerald-600 font-medium">✓ Coordonnées enregistrées</span>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline inline-flex items-center gap-1 font-semibold"
+            >
+              🗺️ Tester sur Google Maps ↗
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                setLatitude("");
+                setLongitude("");
+                setGpsMessage(null);
+              }}
+              className="text-[var(--fg-muted)] hover:text-red-600 ml-auto"
+            >
+              Effacer
+            </button>
+          </div>
+        )}
+      </div>
+
       <Field label="Source d'acquisition (Facebook, Recommandation, Terrain...)" name="source" defaultValue={defaultValues?.source ?? ""} />
 
       <div>

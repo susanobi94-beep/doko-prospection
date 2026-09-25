@@ -15,6 +15,8 @@ export const ProspectInputSchema = z.object({
   source: z.string().optional().or(z.literal("")),
   notes: z.string().optional().or(z.literal("")),
   assignedTo: z.string().uuid().optional().or(z.literal("")),
+  latitude: z.number().min(-90, "Latitude invalide").max(90, "Latitude invalide").optional().nullable(),
+  longitude: z.number().min(-180, "Longitude invalide").max(180, "Longitude invalide").optional().nullable(),
 });
 
 export type ProspectInput = z.infer<typeof ProspectInputSchema>;

@@ -21,6 +21,8 @@ export type Prospect = {
   team_id?: string | null;
   team?: { id: string; name: string } | null;
   tags?: ProspectTag[];
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 export type ProspectDetail = Prospect & {
@@ -33,7 +35,7 @@ export async function getProspect(id: string): Promise<ProspectDetail | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("prospects")
-    .select("id, name, city, category, phone, whatsapp, address, source, notes, status, created_at, assigned_to, assigned_staff:staff!prospects_assigned_to_fkey(name), team:teams(id, name), prospect_tags(tag:tags(id, label, color))")
+    .select("id, name, city, category, phone, whatsapp, address, source, notes, status, created_at, assigned_to, latitude, longitude, assigned_staff:staff!prospects_assigned_to_fkey(name), team:teams(id, name), prospect_tags(tag:tags(id, label, color))")
     .eq("id", id)
     .is("deleted_at", null)
     .single();
@@ -41,7 +43,7 @@ export async function getProspect(id: string): Promise<ProspectDetail | null> {
   if (error || !data) {
     const fallback = await supabase
       .from("prospects")
-      .select("id, name, city, category, phone, whatsapp, address, source, notes, status, created_at, assigned_to")
+      .select("id, name, city, category, phone, whatsapp, address, source, notes, status, created_at, assigned_to, latitude, longitude")
       .eq("id", id)
       .is("deleted_at", null)
       .single();
@@ -87,8 +89,8 @@ export async function listProspects(input: ListProspectsInput): Promise<ListPros
 
   const supabase = await createClient();
   const selectClause = filter.tagId
-    ? "id, name, city, category, phone, whatsapp, status, created_at, assigned_to, assigned_staff:staff!prospects_assigned_to_fkey(name), team:teams(id, name), prospect_tags!inner(tag_id, tag:tags(id, label, color))"
-    : "id, name, city, category, phone, whatsapp, status, created_at, assigned_to, assigned_staff:staff!prospects_assigned_to_fkey(name), team:teams(id, name), prospect_tags(tag:tags(id, label, color))";
+    ? "id, name, city, category, phone, whatsapp, status, created_at, assigned_to, latitude, longitude, assigned_staff:staff!prospects_assigned_to_fkey(name), team:teams(id, name), prospect_tags!inner(tag_id, tag:tags(id, label, color))"
+    : "id, name, city, category, phone, whatsapp, status, created_at, assigned_to, latitude, longitude, assigned_staff:staff!prospects_assigned_to_fkey(name), team:teams(id, name), prospect_tags(tag:tags(id, label, color))";
 
   let query = supabase
     .from("prospects")
@@ -159,6 +161,8 @@ export async function listProspects(input: ListProspectsInput): Promise<ListPros
     assigned_staff: row.assigned_staff,
     team_id: row.team_id,
     team: row.team,
+    latitude: row.latitude,
+    longitude: row.longitude,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tags: (row.prospect_tags ?? []).map((pt: any) => pt.tag).filter(Boolean),
   }));

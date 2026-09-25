@@ -94,6 +94,28 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
         <Detail label="Adresse" value={prospect.address} />
         <Detail label="Source" value={prospect.source} />
         <Detail label="Assigné à" value={assignedName} />
+        <div>
+          <dt className="text-xs text-[var(--fg-muted)]">Coordonnées GPS</dt>
+          <dd className="text-[var(--fg)]">
+            {prospect.latitude && prospect.longitude ? (
+              <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                <span className="font-mono text-xs bg-[var(--surface-muted)] px-2 py-0.5 rounded border border-[var(--border)]">
+                  📍 {prospect.latitude.toFixed(5)}, {prospect.longitude.toFixed(5)}
+                </span>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${prospect.latitude},${prospect.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400"
+                >
+                  🗺️ Itinéraire / Maps ↗
+                </a>
+              </div>
+            ) : (
+              <span className="text-[var(--fg-muted)] text-xs italic">Non renseignées</span>
+            )}
+          </dd>
+        </div>
       </dl>
 
       {prospect.notes && (

@@ -100,6 +100,9 @@ export default function GuideFormationPage() {
                   <li>Renseignez le nom de la boutique (ex: <em>Boutique Phone Plus</em>).</li>
                   <li>Saisissez le numéro de téléphone principal (Orange, MTN, Camtel).</li>
                   <li>Indiquez la ville et le quartier (ex: <em>Douala - Akwa</em>, <em>Yaoundé - Mokolo</em>).</li>
+                  <li>
+                    📍 <strong>Position GPS (Nouveau & Optionnel) :</strong> Cliquez sur <em>&quot;Capturer ma position GPS&quot;</em> quand vous êtes devant le magasin pour enregistrer l&apos;emplacement exact et lancer l&apos;itinéraire Google Maps en 1 clic !
+                  </li>
                   <li>Cliquez sur <strong>&quot;Enregistrer la boutique&quot;</strong>.</li>
                 </ul>
               </div>

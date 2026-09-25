@@ -15,6 +15,11 @@ export type ProspectFormState = {
 
 function formDataToProspectInput(formData: FormData): ProspectInput {
   const assignedToRaw = formData.get("assignedTo");
+  const latRaw = formData.get("latitude");
+  const lngRaw = formData.get("longitude");
+  const parsedLat = latRaw !== null && String(latRaw).trim() !== "" ? Number(String(latRaw).trim()) : null;
+  const parsedLng = lngRaw !== null && String(lngRaw).trim() !== "" ? Number(String(lngRaw).trim()) : null;
+
   return {
     name: String(formData.get("name") ?? "").trim(),
     phone: String(formData.get("phone") ?? "").trim(),
@@ -25,6 +30,8 @@ function formDataToProspectInput(formData: FormData): ProspectInput {
     source: String(formData.get("source") ?? "").trim(),
     notes: String(formData.get("notes") ?? "").trim(),
     assignedTo: assignedToRaw ? String(assignedToRaw).trim() : undefined,
+    latitude: parsedLat !== null && !isNaN(parsedLat) ? parsedLat : null,
+    longitude: parsedLng !== null && !isNaN(parsedLng) ? parsedLng : null,
   };
 }
 
@@ -55,7 +62,7 @@ export async function createProspect(
 
   const supabase = await createClient();
 
-  // Appel avec assigned_to si disponible
+  // Appel avec assigned_to et coordonnées GPS si disponibles
   const rpcParams: Record<string, unknown> = {
     p_name: parsed.data.name,
     p_city: parsed.data.city,
@@ -66,15 +73,22 @@ export async function createProspect(
     p_source: parsed.data.source || null,
     p_notes: parsed.data.notes || null,
     p_assigned_to: parsed.data.assignedTo || null,
+    p_latitude: parsed.data.latitude ?? null,
+    p_longitude: parsed.data.longitude ?? null,
   };
 
   const { data, error } = await supabase.rpc("create_prospect_with_log", rpcParams);
 
   if (error) {
-    // Si la signature 9-params n'est pas encore en place, repli sur 8 params
+    // Si la signature avec GPS n'est pas encore en place, repli progressif
     if (error.message.includes("function create_prospect_with_log") && error.message.includes("does not exist")) {
-      delete rpcParams.p_assigned_to;
-      const fallback = await supabase.rpc("create_prospect_with_log", rpcParams);
+      delete rpcParams.p_latitude;
+      delete rpcParams.p_longitude;
+      let fallback = await supabase.rpc("create_prospect_with_log", rpcParams);
+      if (fallback.error && fallback.error.message.includes("does not exist")) {
+        delete rpcParams.p_assigned_to;
+        fallback = await supabase.rpc("create_prospect_with_log", rpcParams);
+      }
       if (fallback.error) {
         return { ok: false, error: handleDuplicatePhoneError(fallback.error.message) };
       }
@@ -112,10 +126,12 @@ export async function updateProspect(
     p_source: parsed.data.source || null,
     p_notes: parsed.data.notes || null,
     p_assigned_to: parsed.data.assignedTo || null,
+    p_latitude: parsed.data.latitude ?? null,
+    p_longitude: parsed.data.longitude ?? null,
   });
 
   if (rpcError) {
-    // Si la RPC n'est pas encore déployée, repli direct sur update
+    // Si la RPC n'est pas encore déployée ou échoue, repli direct sur update
     if (rpcError.message.includes("function update_prospect_with_log") && rpcError.message.includes("does not exist")) {
       const { error: updateError } = await supabase
         .from("prospects")
@@ -129,6 +145,8 @@ export async function updateProspect(
           source: parsed.data.source || null,
           notes: parsed.data.notes || null,
           assigned_to: parsed.data.assignedTo || null,
+          latitude: parsed.data.latitude ?? null,
+          longitude: parsed.data.longitude ?? null,
         })
         .eq("id", id);
 
