@@ -1,14 +1,16 @@
 -- supabase/migrations/0005_gps_coordinates.sql
 -- Ajout des coordonnées GPS (latitude & longitude) pour la géolocalisation des boutiques terrain
 
--- 1. Colonnes latitude et longitude
-alter table prospects add column if not exists latitude double precision;
-alter table prospects add column if not exists longitude double precision;
+SET search_path TO public, auth;
 
-create index if not exists prospects_coordinates_idx on prospects (latitude, longitude) where deleted_at is null;
+-- 1. Colonnes latitude et longitude
+alter table public.prospects add column if not exists latitude double precision;
+alter table public.prospects add column if not exists longitude double precision;
+
+create index if not exists prospects_coordinates_idx on public.prospects (latitude, longitude) where deleted_at is null;
 
 -- 2. Mise à jour de la RPC create_prospect_with_log avec latitude et longitude
-create or replace function create_prospect_with_log(
+create or replace function public.create_prospect_with_log(
   p_name text,
   p_city text,
   p_category text,
