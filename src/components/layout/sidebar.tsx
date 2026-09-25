@@ -9,9 +9,19 @@ export function Sidebar({ role }: { role?: string }) {
 
   return (
     <aside className="flex w-full shrink-0 items-center gap-1 overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] p-3 md:h-screen md:w-64 md:flex-col md:items-stretch md:border-r md:border-b-0 md:p-4">
-      <Link href="/" className="mr-3 shrink-0 font-heading text-lg font-bold text-[var(--fg)] md:mb-6 md:mr-0">
+      <Link href="/" className="mr-3 shrink-0 font-heading text-lg font-bold text-[var(--fg)] md:mb-4 md:mr-0">
         Doko Prospection
       </Link>
+
+      {role !== "lecture" && (
+        <Link
+          href="/prospects/new"
+          className="shrink-0 flex items-center justify-center gap-1.5 rounded-[6px] bg-emerald-600 px-3 py-2 text-xs md:text-sm font-bold text-white shadow-xs transition-colors hover:bg-emerald-700 md:mb-3"
+        >
+          <span>➕</span>
+          <span>Nouvelle boutique</span>
+        </Link>
+      )}
 
       <nav className="flex items-center gap-1 md:flex-col md:items-stretch md:space-y-1">
         {links.map((link) => (
