@@ -39,6 +39,7 @@ export const LoginInputSchema = z.object({
 export const StaffCreateSchema = z.object({
   email: z.string().trim().toLowerCase().email("Email invalide"),
   name: z.string().min(1, "Le nom est requis"),
+  phone: z.string().trim().min(6, "Le numéro de téléphone est requis (au moins 6 caractères)"),
   role: StaffRoleSchema,
   password: z.string().min(6, "Le mot de passe doit comporter au moins 6 caractères"),
 });

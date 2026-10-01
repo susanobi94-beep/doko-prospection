@@ -45,3 +45,4 @@ next-env.d.ts
 
 !.env.example
 /.claude/scheduled_tasks.lock
+/voices activites/

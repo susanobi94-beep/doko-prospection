@@ -47,7 +47,7 @@ export function TeamManagementTable({
           <thead className="border-b border-[var(--border)] bg-[var(--surface-muted)] text-xs uppercase text-[var(--fg-muted)]">
             <tr>
               <th className="px-4 py-3">Collaborateur</th>
-              <th className="px-4 py-3">Email</th>
+              <th className="px-4 py-3">Email & Contact</th>
               <th className="px-4 py-3">Rôle</th>
               <th className="px-4 py-3">Statut Accès</th>
               <th className="px-4 py-3 text-right">Actions Centrales</th>
@@ -66,7 +66,25 @@ export function TeamManagementTable({
                   <td className="px-4 py-3 font-medium">
                     {member.name} {isSelf && <span className="text-xs text-[var(--primary)] font-normal">(Vous)</span>}
                   </td>
-                  <td className="px-4 py-3 text-[var(--fg-muted)]">{member.email}</td>
+                  <td className="px-4 py-3">
+                    <div className="text-[var(--fg-muted)]">{member.email}</div>
+                    {member.phone && (
+                      <div className="mt-0.5 flex items-center gap-2 text-xs">
+                        <a href={`tel:${member.phone}`} className="text-[var(--fg)] hover:text-blue-600 hover:underline">
+                          📞 {member.phone}
+                        </a>
+                        <a
+                          href={`https://wa.me/${member.phone.replace(/\D/g, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-emerald-600 hover:underline"
+                          title="Ouvrir WhatsApp"
+                        >
+                          💬
+                        </a>
+                      </div>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <select
                       disabled={pending || isSelf}

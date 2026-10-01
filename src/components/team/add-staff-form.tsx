@@ -50,13 +50,19 @@ export function AddStaffForm() {
           </div>
 
           <div>
-            <Label htmlFor="staff-email">Adresse Email</Label>
-            <Input id="staff-email" name="email" type="email" placeholder="commercial@doko.cm" required className="mt-1" />
-            {fieldErrors.email && <p className="mt-1 text-xs text-red-500">{fieldErrors.email}</p>}
+            <Label htmlFor="staff-phone">Numéro de téléphone (Appel / WhatsApp)</Label>
+            <Input id="staff-phone" name="phone" type="tel" placeholder="Ex: 699112233" required className="mt-1" />
+            {fieldErrors.phone && <p className="mt-1 text-xs text-red-500">{fieldErrors.phone}</p>}
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <Label htmlFor="staff-email">Adresse Email</Label>
+            <Input id="staff-email" name="email" type="email" placeholder="commercial@doko.cm" required className="mt-1" />
+            {fieldErrors.email && <p className="mt-1 text-xs text-red-500">{fieldErrors.email}</p>}
+          </div>
+
           <div>
             <Label htmlFor="staff-role">Rôle et permissions</Label>
             <select
@@ -70,12 +76,12 @@ export function AddStaffForm() {
               <option value="lecture">Lecture seule (consultation uniquement)</option>
             </select>
           </div>
+        </div>
 
-          <div>
-            <Label htmlFor="staff-password">Mot de passe temporaire</Label>
-            <Input id="staff-password" name="password" type="text" placeholder="Minimum 6 caractères" required className="mt-1" />
-            {fieldErrors.password && <p className="mt-1 text-xs text-red-500">{fieldErrors.password}</p>}
-          </div>
+        <div>
+          <Label htmlFor="staff-password">Mot de passe temporaire</Label>
+          <Input id="staff-password" name="password" type="text" placeholder="Minimum 6 caractères" required className="mt-1" />
+          {fieldErrors.password && <p className="mt-1 text-xs text-red-500">{fieldErrors.password}</p>}
         </div>
 
         <button

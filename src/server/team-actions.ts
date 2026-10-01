@@ -26,6 +26,7 @@ export async function createStaffMember(
   const raw = {
     email: String(formData.get("email") ?? "").trim(),
     name: String(formData.get("name") ?? "").trim(),
+    phone: String(formData.get("phone") ?? "").trim(),
     role: String(formData.get("role") ?? "commercial") as StaffRole,
     password: String(formData.get("password") ?? "").trim(),
   };
@@ -57,6 +58,10 @@ export async function createStaffMember(
     email: parsed.data.email,
     password: parsed.data.password,
     email_confirm: true,
+    user_metadata: {
+      name: parsed.data.name,
+      phone: parsed.data.phone,
+    },
   });
 
   if (authError || !authUser.user) {
@@ -66,14 +71,26 @@ export async function createStaffMember(
     return { ok: false, error: `Erreur Auth: ${authError?.message ?? "inconnue"}` };
   }
 
-  // 2. Insérer dans la table staff
-  const { error: staffError } = await adminClient.from("staff").upsert({
+  // 2. Insérer dans la table staff (avec repli progressif si colonne phone pas encore créée)
+  let { error: staffError } = await adminClient.from("staff").upsert({
     id: authUser.user.id,
     email: parsed.data.email,
     name: parsed.data.name,
+    phone: parsed.data.phone,
     role: parsed.data.role,
     active: true,
   });
+
+  if (staffError && staffError.message.includes("phone")) {
+    const fallback = await adminClient.from("staff").upsert({
+      id: authUser.user.id,
+      email: parsed.data.email,
+      name: parsed.data.name,
+      role: parsed.data.role,
+      active: true,
+    });
+    staffError = fallback.error;
+  }
 
   if (staffError) {
     return { ok: false, error: `Erreur Staff DB: ${staffError.message}` };
