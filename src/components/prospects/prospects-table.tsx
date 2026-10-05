@@ -76,7 +76,6 @@ export function ProspectsTable({ rows }: { rows: Prospect[] }) {
                         rel="noopener noreferrer"
                         title={`GPS: ${row.latitude.toFixed(4)}, ${row.longitude.toFixed(4)} (Ouvrir Maps)`}
                         className="inline-flex items-center rounded bg-blue-50 px-1 py-0.5 text-[10px] font-semibold text-blue-600 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-400"
-                        onClick={(e) => e.stopPropagation()}
                       >
                         📍 Maps
                       </a>

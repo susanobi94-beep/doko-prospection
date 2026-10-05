@@ -21,8 +21,12 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  // Touches the session so @supabase/ssr refreshes an expiring token before it lapses.
-  await supabase.auth.getUser();
+  try {
+    // Touches the session so @supabase/ssr refreshes an expiring token before it lapses.
+    await supabase.auth.getUser();
+  } catch (error) {
+    console.error("Proxy auth refresh failed gracefully:", error);
+  }
 
   return response;
 }

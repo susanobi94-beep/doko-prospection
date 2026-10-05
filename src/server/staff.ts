@@ -90,16 +90,17 @@ export async function listAllStaff(): Promise<StaffMember[]> {
   const supabase = await createClient();
   const primaryRes = await supabase
     .from("staff")
-    .select("id, email, name, phone, role, active, team_id, created_at, team:teams(id, name, city)")
+    .select("id, email, name, phone, role, active, team_id, created_at, team:teams!staff_team_id_fkey(id, name, city)")
     .order("name", { ascending: true });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let rows: any[] = primaryRes.data ?? [];
 
-  if (primaryRes.error && primaryRes.error.message.includes("phone")) {
+  if (primaryRes.error) {
+    console.error("listAllStaff primary error:", primaryRes.error.message);
     const fallbackRes = await supabase
       .from("staff")
-      .select("id, email, name, role, active, team_id, created_at, team:teams(id, name, city)")
+      .select("id, email, name, role, active, team_id, created_at")
       .order("name", { ascending: true });
     rows = fallbackRes.data ?? [];
   }
